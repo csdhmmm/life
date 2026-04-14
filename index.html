@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>人生模拟器</title>
+  <style>
+    :root{--bg:#0b1220;--card:#111b2e;--text:#e7eefc;--muted:#a9b6d3;--btn:#2a68ff;--btn2:#26324f;--bad:#ff4d6d;--good:#2ee59d}
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#071027,#0b1220);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif}
+    .wrap{max-width:860px;margin:24px auto;padding:0 16px}
+    h1{margin:0 0 8px;font-size:28px}
+    .sub{color:var(--muted);margin-bottom:16px}
+    .grid{display:grid;grid-template-columns:1fr;gap:14px}
+    @media (min-width:860px){.grid{grid-template-columns: 1.3fr .7fr}}
+    .card{background:rgba(17,27,46,.92);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .pill{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.08);color:var(--muted);font-size:12px}
+    .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+    .stat{background:rgba(255,255,255,.06);border-radius:12px;padding:10px}
+    .stat .k{color:var(--muted);font-size:12px}
+    .stat .v{font-size:18px;font-weight:700;margin-top:2px}
+    .eventTitle{font-weight:800;font-size:18px;margin:0 0 10px}
+    .eventDesc{color:var(--muted);line-height:1.6;margin:0 0 14px}
+    .choices{display:grid;gap:10px}
+    button{border:0;border-radius:12px;padding:12px 12px;background:var(--btn2);color:var(--text);font-weight:700;cursor:pointer;text-align:left}
+    button:hover{filter:brightness(1.08)}
+    .primary{background:var(--btn)}
+    .log{max-height:420px;overflow:auto;font-size:13px;line-height:1.55;color:var(--muted)}
+    .log p{margin:0 0 10px}
+    .delta{font-weight:700}
+    .good{color:var(--good)}
+    .bad{color:var(--bad)}
+    .footer{margin-top:14px;color:var(--muted);font-size:12px}
+    .endTitle{font-size:20px;font-weight:900;margin:0 0 8px}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>人生模拟器（网页版 Demo）</h1>
+  <div class="sub">每一岁都会遇到事件，选择会改变属性；18 岁后根据经历和属性生成职业与未来。</div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="row">
+        <div class="pill">年龄：<span id="age">0</span></div>
+        <div class="pill">回合：<span id="turn">0</span></div>
+        <div class="pill">标签：<span id="tags">无</span></div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+
+      <hr style="border:0;border-top:1px solid rgba(255,255,255,.08);margin:14px 0" />
+
+      <p class="eventTitle" id="eventTitle">-</p>
+      <p class="eventDesc" id="eventDesc">-</p>
+      <div class="choices" id="choices"></div>
+
+      <div class="footer">
+        提示：这是可扩展的“事件 + 选项”框架。你可以很容易加入更多年龄段、更多结局、更多属性。
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <div style="font-weight:900">人生记录</div>
+        <div class="row">
+          <button id="restart" class="primary" style="padding:10px 12px">重开</button>
+        </div>
+      </div>
+      <div class="log" id="log" style="margin-top:10px"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/** ====== 游戏状态 ====== */
+const state = {
+  age: 0,
+  turn: 0,
+  stats: {
+    intel: 5,   // 智力
+    charm: 5,   // 魅力
+    health: 5,  // 健康
+    money: 0,   // 金钱
+    happy: 5,   // 幸福
+  },
+  tags: new Set(),  // 经历标签
+  alive: true,
+  ended: false,
+  log: []
+};
+
+/** ====== 事件库（示例：少量事件） ======
+ * 你可以继续往下加：按 ageRange 或固定 age 触发。
+ */
+const EVENTS = [
+  {
+    id: "born",
+    when: (s) => s.age === 0,
+    title: "你出生了",
+    desc: "欢迎来到这个世界。先选一个“天赋倾向”。",
+    choices: [
+      { text: "爱读书：智力 +2（但少点运动）", apply: (s)=>delta(s,{intel:+2,health:-1}) },
+      { text: "爱运动：健康 +2（但不太坐得住）", apply: (s)=>delta(s,{health:+2,intel:-1}) },
+      { text: "社交达人：魅力 +2（但有点贪玩）", apply: (s)=>delta(s,{charm:+2,intel:-1}) },
+    ]
+  },
+  {
+    id: "primary",
+    when: (s) => s.age === 6,
+    title: "上小学了",
+    desc: "你开始接触系统学习。你更愿意把时间花在哪？",
+    choices: [
+      { text: "认真学习", apply: (s)=>delta(s,{intel:+2,happy:-1}) },
+      { text: "结交朋友", apply: (s)=>delta(s,{charm:+2,happy:+1}) },
+      { text: "运动社团", apply: (s)=>delta(s,{health:+2}) },
+    ]
+  },
+  {
+    id: "teen1",
+    when: (s) => s.age === 12,
+    title: "青春期的选择",
+    desc: "你逐渐有自己的想法。面对压力，你会怎么做？",
+    choices: [
+      { text: "卷起来：冲刺成绩", apply: (s)=>{ delta(s,{intel:+3,happy:-2}); s.tags.add("学霸"); } },
+      { text: "找个爱好：音乐/绘画/写作", apply: (s)=>{ delta(s,{charm:+1,intel:+1,happy:+2}); s.tags.add("艺术"); } },
+      { text: "打工攒钱：早点独立", apply: (s)=>{ delta(s,{money:+8,health:-1,happy:-1}); s.tags.add("早当家"); } },
+    ]
+  },
+  {
+    id: "exam",
+    when: (s) => s.age === 15,
+    title: "关键考试",
+    desc: "你要不要拼一把？",
+    choices: [
+      { text: "闭关冲刺", apply: (s)=>delta(s,{intel:+3,happy:-2,health:-1}) },
+      { text: "稳扎稳打", apply: (s)=>delta(s,{intel:+1,happy:+0}) },
+      { text: "随缘吧（保持心态）", apply: (s)=>delta(s,{happy:+2,intel:-1}) },
+    ]
+  },
+  {
+    id: "18",
+    when: (s) => s.age === 18,
+    title: "成年了",
+    desc: "你站在人生分岔路口：继续深造、直接工作、还是冒险一把？",
+    choices: [
+      { text: "上大学（长期投资）", apply: (s)=>{ s.tags.add("大学"); delta(s,{intel:+2,money:-2,happy:+1}); } },
+      { text: "直接工作（尽快赚钱）", apply: (s)=>{ s.tags.add("工作"); delta(s,{money:+10,health:-1}); } },
+      { text: "创业（高风险高回报）", apply: (s)=>{ s.tags.add("创业"); gambleStartup(s); } },
+    ]
+  },
+  {
+    id: "mid",
+    when: (s) => s.age === 22,
+    title: "22 岁的机会",
+    desc: "你遇到一次重要机会：选择会影响你未来的轨迹。",
+    choices: [
+      { text: "进大厂/稳定平台", apply: (s)=>{ s.tags.add("平台"); delta(s,{money:+12,intel:+1,happy:-1}); } },
+      { text: "加入初创团队", apply: (s)=>{ s.tags.add("初创"); delta(s,{money:+6,intel:+2,happy:+1,health:-1}); } },
+      { text: "考研/考公", apply: (s)=>{ s.tags.add("体制"); delta(s,{intel:+2,happy:-1}); } },
+    ]
+  },
+  {
+    id: "health",
+    when: (s) => s.age === 25,
+    title: "健康警报",
+    desc: "你最近有点透支。你会怎么调整？",
+    choices: [
+      { text: "运动 + 作息：自律一波", apply: (s)=>delta(s,{health:+3,happy:+1,money:-2}) },
+      { text: "继续拼：先把钱赚了", apply: (s)=>delta(s,{money:+8,health:-3,happy:-1}) },
+      { text: "躺平旅行：给自己放个假", apply: (s)=>delta(s,{happy:+3,money:-6,health:+1}) },
+    ]
+  },
+  {
+    id: "end",
+    when: (s) => s.age === 30,
+    title: "阶段性结算",
+    desc: "30 岁了。回看这些年，你的人生会走向怎样的职业与未来？",
+    choices: [
+      { text: "查看结局", apply: (s)=>endGame(s) }
+    ]
+  },
+];
+
+/** ====== 规则与工具函数 ====== */
+function clamp(n, lo, hi){ return Math.max(lo, Math.min(hi, n)); }
+
+function delta(s, d){
+  for (const [k, v] of Object.entries(d)){
+    s.stats[k] = clamp(s.stats[k] + v, -20, 999);
+  }
+  logLine(s, formatDelta(d));
+}
+
+function formatDelta(d){
+  const map = { intel:"智力", charm:"魅力", health:"健康", money:"金钱", happy:"幸福" };
+  const parts = [];
+  for (const [k, v] of Object.entries(d)){
+    const name = map[k] || k;
+    const cls = v >= 0 ? "good" : "bad";
+    const sign = v >= 0 ? "+" : "";
+    parts.push(`<span class="delta ${cls}">${name} ${sign}${v}</span>`);
+  }
+  return parts.join("，");
+}
+
+function logLine(s, html){
+  s.log.push(html);
+  const logEl = document.getElementById("log");
+  logEl.innerHTML = s.log.map(x => `<p>· ${x}</p>`).join("");
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function pickEvent(s){
+  // 找到第一个满足条件的事件
+  return EVENTS.find(e => e.when(s));
+}
+
+function nextYear(s){
+  s.age += 1;
+  s.turn += 1;
+}
+
+function gambleStartup(s){
+  // 简单概率：智力/魅力越高成功率越高
+  const base = 0.25;
+  const bonus = (s.stats.intel + s.stats.charm) * 0.02; // 约 0~0.4
+  const p = Math.max(0.05, Math.min(0.85, base + bonus));
+  const roll = Math.random();
+  if (roll < p){
+    logLine(s, `创业成了！你拿到一轮融资。`);
+    delta(s, { money:+25, happy:+2, intel:+1 });
+  } else {
+    logLine(s, `创业失败……但你学到了很多。`);
+    delta(s, { money:-6, happy:-1, intel:+2 });
+  }
+}
+
+function ending(s){
+  const st = s.stats;
+  const tags = s.tags;
+
+  // 非常简化的结局判定（你可以继续扩展成很多结局）
+  if (st.health <= 0) {
+    return {
+      job: "健康管理师（被迫转型）",
+      future: "你意识到身体才是最大的本钱。未来几年你把生活重心放在恢复、规律与长期主义上。"
+    };
+  }
+
+  if (tags.has("体制") && st.intel >= 8) {
+    return {
+      job: "公务员 / 事业编",
+      future: "你追求稳定与秩序。未来节奏平稳，生活可预期，积累人脉与资源，适合长期规划。"
+    };
+  }
+
+  if (tags.has("创业") && st.money >= 25) {
+    return {
+      job: "创业者 / 产品负责人",
+      future: "你在不确定中找机会。未来可能大起大落，但你的成长速度很快，越挫越强。"
+    };
+  }
+
+  if (st.intel >= 12) {
+    return {
+      job: "工程师 / 研究员",
+      future: "你擅长用理性拆解问题。未来会靠专业能力持续升级，适合走技术/学术深耕路线。"
+    };
+  }
+
+  if (st.charm >= 12) {
+    return {
+      job: "市场/销售/内容创作者",
+      future: "你能影响他人、建立连接。未来会在表达与协作中获得机会，人脉会成为你的杠杆。"
+    };
+  }
+
+  if (st.money >= 25) {
+    return {
+      job: "投资/生意人",
+      future: "你更敏感于回报和资源配置。未来你会不断做选择题：风险、收益、时间与自由。"
+    };
+  }
+
+  // 默认
+  return {
+    job: "普通上班族",
+    future: "你走了一条相对常见但稳妥的路。未来的关键在于：你愿意为哪件事持续投入 3 年以上。"
+  };
+}
+
+function endGame(s){
+  const end = ending(s);
+  s.ended = true;
+
+  const title = `结局：${end.job}`;
+  const summary = `
+    <div class="endTitle">${title}</div>
+    <div class="eventDesc">${end.future}</div>
+    <div class="eventDesc">最终属性：智力 ${s.stats.intel}｜魅力 ${s.stats.charm}｜健康 ${s.stats.health}｜金钱 ${s.stats.money}｜幸福 ${s.stats.happy}</div>
+  `;
+  logLine(s, `—— 结局生成 ——`);
+  logLine(s, summary);
+
+  // 把主面板变成“结局页”
+  document.getElementById("eventTitle").textContent = title;
+  document.getElementById("eventDesc").textContent = end.future;
+  document.getElementById("choices").innerHTML = `<button class="primary" id="again">再来一局</button>`;
+  document.getElementById("again").onclick = () => reset();
+}
+
+function renderStats(){
+  const map = [
+    ["intel","智力"],
+    ["charm","魅力"],
+    ["health","健康"],
+    ["money","金钱"],
+    ["happy","幸福"],
+  ];
+  const statsEl = document.getElementById("stats");
+  statsEl.innerHTML = map.map(([k, label]) => `
+    <div class="stat">
+      <div class="k">${label}</div>
+      <div class="v">${state.stats[k]}</div>
+    </div>
+  `).join("");
+}
+
+function renderTop(){
+  document.getElementById("age").textContent = state.age;
+  document.getElementById("turn").textContent = state.turn;
+  document.getElementById("tags").textContent = state.tags.size ? Array.from(state.tags).join("、") : "无";
+}
+
+function renderEvent(){
+  if (state.ended) return;
+
+  const e = pickEvent(state);
+  if (!e){
+    // 没有事件：自动过一年（你也可以改成随机事件）
+    nextYear(state);
+    renderAll();
+    return;
+  }
+
+  document.getElementById("eventTitle").textContent = e.title;
+  document.getElementById("eventDesc").textContent = e.desc;
+
+  const choicesEl = document.getElementById("choices");
+  choicesEl.innerHTML = "";
+  e.choices.forEach((ch, idx) => {
+    const btn = document.createElement("button");
+    btn.textContent = ch.text;
+    if (idx === 0) btn.classList.add("primary");
+    btn.onclick = () => {
+      // 记录事件
+      logLine(state, `<b>${state.age} 岁</b>：${e.title} → 你选择了「${escapeHtml(ch.text)}」`);
+      ch.apply(state);
+
+      // 事件触发后：年龄推进到下一年（结局事件不推进）
+      if (e.id !== "end") nextYear(state);
+
+      renderAll();
+    };
+    choicesEl.appendChild(btn);
+  });
+}
+
+function escapeHtml(str){
+  return str.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+}
+
+function reset(){
+  state.age = 0;
+  state.turn = 0;
+  state.stats = { intel:5, charm:5, health:5, money:0, happy:5 };
+  state.tags = new Set();
+  state.ended = false;
+  state.log = [];
+  document.getElementById("log").innerHTML = "";
+  logLine(state, "新的人生开始了。");
+  renderAll();
+}
+
+function renderAll(){
+  renderTop();
+  renderStats();
+  renderEvent();
+}
+
+document.getElementById("restart").onclick = () => reset();
+
+reset();
+</script>
+</body>
+</html>
