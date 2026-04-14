@@ -3,345 +3,357 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>人生模拟器</title>
+  <title>人生模拟器：离谱宇宙</title>
   <style>
-    :root{--bg:#0b1220;--card:#111b2e;--text:#e7eefc;--muted:#a9b6d3;--btn:#2a68ff;--btn2:#26324f;--bad:#ff4d6d;--good:#2ee59d}
+    :root{
+      --bg:#070a12;--card:#0f1630;--card2:#0c1227;--text:#e9eeff;--muted:#a7b2db;
+      --line:rgba(255,255,255,.08);--btn:#2a6bff;--btn2:#243055;--good:#2ee59d;--bad:#ff4d6d;--warn:#ffd166;
+    }
     *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#071027,#0b1220);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif}
-    .wrap{max-width:860px;margin:24px auto;padding:0 16px}
-    h1{margin:0 0 8px;font-size:28px}
-    .sub{color:var(--muted);margin-bottom:16px}
+    body{margin:0;background:radial-gradient(1200px 700px at 30% 0%, #131b3d 0%, #070a12 55%, #050712 100%);color:var(--text);
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif}
+    .wrap{max-width:980px;margin:22px auto;padding:0 16px}
+    h1{margin:0 0 6px;font-size:26px}
+    .sub{color:var(--muted);margin-bottom:14px;line-height:1.55}
     .grid{display:grid;grid-template-columns:1fr;gap:14px}
-    @media (min-width:860px){.grid{grid-template-columns: 1.3fr .7fr}}
-    .card{background:rgba(17,27,46,.92);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px}
+    @media (min-width:980px){.grid{grid-template-columns: 1.45fr .55fr}}
+    .card{background:rgba(15,22,48,.92);border:1px solid var(--line);border-radius:14px;padding:16px}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .pill{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.08);color:var(--muted);font-size:12px}
-    .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
-    .stat{background:rgba(255,255,255,.06);border-radius:12px;padding:10px}
-    .stat .k{color:var(--muted);font-size:12px}
-    .stat .v{font-size:18px;font-weight:700;margin-top:2px}
-    .eventTitle{font-weight:800;font-size:18px;margin:0 0 10px}
-    .eventDesc{color:var(--muted);line-height:1.6;margin:0 0 14px}
-    .choices{display:grid;gap:10px}
-    button{border:0;border-radius:12px;padding:12px 12px;background:var(--btn2);color:var(--text);font-weight:700;cursor:pointer;text-align:left}
+    .actions{display:flex;gap:10px;margin-top:10px}
+    button{border:0;border-radius:12px;padding:12px 12px;background:var(--btn2);color:var(--text);font-weight:800;cursor:pointer;text-align:left}
     button:hover{filter:brightness(1.08)}
     .primary{background:var(--btn)}
-    .log{max-height:420px;overflow:auto;font-size:13px;line-height:1.55;color:var(--muted)}
+    .smallbtn{padding:10px 12px;text-align:center}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+    @media (max-width:540px){.stats{grid-template-columns:repeat(2,1fr)}}
+    .stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px}
+    .stat .k{color:var(--muted);font-size:12px}
+    .stat .v{font-size:18px;font-weight:900;margin-top:2px}
+    .sep{border:0;border-top:1px solid var(--line);margin:14px 0}
+    .eventTitle{font-weight:950;font-size:18px;margin:0 0 10px}
+    .eventDesc{color:var(--muted);line-height:1.65;margin:0 0 14px}
+    .choices{display:grid;gap:10px}
+    .log{max-height:520px;overflow:auto;font-size:13px;line-height:1.65;color:var(--muted)}
     .log p{margin:0 0 10px}
-    .delta{font-weight:700}
+    .delta{font-weight:900}
     .good{color:var(--good)}
     .bad{color:var(--bad)}
-    .footer{margin-top:14px;color:var(--muted);font-size:12px}
-    .endTitle{font-size:20px;font-weight:900;margin:0 0 8px}
+    .warn{color:var(--warn)}
+    .endTitle{font-size:20px;font-weight:1000;margin:0 0 8px}
+    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
+    .chart{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px;margin-top:10px}
+    .hint{font-size:12px;color:var(--muted);margin-top:8px}
+    a{color:#8ab4ff}
   </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>人生模拟器（网页版 Demo）</h1>
-  <div class="sub">每一岁都会遇到事件，选择会改变属性；18 岁后根据经历和属性生成职业与未来。</div>
+  <h1>人生模拟器：离谱宇宙</h1>
+  <div class="sub">
+    关键节点式人生。你可能成为：<b>顶流网红</b>、<b>修仙老祖</b>、或<b>穿越打工皇帝</b>。每次选择会改变属性，并记录你的<b>幸福曲线</b>。
+  </div>
 
   <div class="grid">
     <div class="card">
       <div class="row">
         <div class="pill">年龄：<span id="age">0</span></div>
-        <div class="pill">回合：<span id="turn">0</span></div>
+        <div class="pill">节点：<span id="turn">0</span></div>
+        <div class="pill">路线：<span id="route">未定</span></div>
         <div class="pill">标签：<span id="tags">无</span></div>
       </div>
 
       <div class="stats" id="stats"></div>
 
-      <hr style="border:0;border-top:1px solid rgba(255,255,255,.08);margin:14px 0" />
+      <hr class="sep" />
 
       <p class="eventTitle" id="eventTitle">-</p>
       <p class="eventDesc" id="eventDesc">-</p>
       <div class="choices" id="choices"></div>
 
-      <div class="footer">
-        提示：这是可扩展的“事件 + 选项”框架。你可以很容易加入更多年龄段、更多结局、更多属性。
+      <div class="actions">
+        <button id="restart" class="primary smallbtn">重开</button>
+        <button id="skip" class="smallbtn">跳到下个节点</button>
+      </div>
+
+      <div class="hint">
+        提示：这是“事件数据驱动”的框架。你后续只要加事件对象，就能扩展剧情。
       </div>
     </div>
 
     <div class="card">
       <div class="row" style="justify-content:space-between">
-        <div style="font-weight:900">人生记录</div>
-        <div class="row">
-          <button id="restart" class="primary" style="padding:10px 12px">重开</button>
-        </div>
+        <div style="font-weight:950">人生记录</div>
+        <div class="pill mono">WASD/方向键：无效（纯点选）</div>
       </div>
       <div class="log" id="log" style="margin-top:10px"></div>
+
+      <div class="chart" id="chartWrap" hidden>
+        <div style="font-weight:900">幸福曲线</div>
+        <div id="chart" style="margin-top:8px"></div>
+        <div class="hint">横轴=关键节点；纵轴=幸福值（越高越快乐）。</div>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-/** ====== 游戏状态 ====== */
+/** ================= 状态与工具 ================= */
+const NODES = [0, 6, 12, 15, 18, 22, 26, 30]; // 关键节点年龄
+const ROUTES = { INFLUENCER:"网红", CULTIVATION:"修仙", ISEKAI:"穿越" };
+
 const state = {
+  nodeIdx: 0,
   age: 0,
   turn: 0,
-  stats: {
-    intel: 5,   // 智力
-    charm: 5,   // 魅力
-    health: 5,  // 健康
-    money: 0,   // 金钱
-    happy: 5,   // 幸福
-  },
-  tags: new Set(),  // 经历标签
-  alive: true,
+  route: null,         // 'INFLUENCER' | 'CULTIVATION' | 'ISEKAI' | null
+  tags: new Set(),
+  // 属性：智力/魅力/体力/情商/运气
+  stats: { intel:5, charm:5, power:5, eq:5, luck:5 },
+  // 幸福（用于曲线）
+  happiness: 50,
+  happinessSeries: [],   // [{age, value}]
+  historyChoices: [],    // [{age, title, choice}]
   ended: false,
   log: []
 };
 
-/** ====== 事件库（示例：少量事件） ======
- * 你可以继续往下加：按 ageRange 或固定 age 触发。
+const clamp = (n, lo, hi)=>Math.max(lo, Math.min(hi, n));
+
+function statName(k){
+  return {intel:"智力", charm:"魅力", power:"体力", eq:"情商", luck:"运气"}[k] || k;
+}
+
+function routeName(r){
+  if (!r) return "未定";
+  return ROUTES[r] || r;
+}
+
+function logLine(html){
+  state.log.push(html);
+  const el = document.getElementById("log");
+  el.innerHTML = state.log.map(x=>`<p>· ${x}</p>`).join("");
+  el.scrollTop = el.scrollHeight;
+}
+
+function delta(d){
+  // d: {stats:{...}, happiness:+/- , tagsAdd:[], tagsDel:[], route:'', note:''}
+  if (d.stats){
+    for (const [k,v] of Object.entries(d.stats)){
+      state.stats[k] = clamp(state.stats[k] + v, -10, 99);
+    }
+  }
+  if (typeof d.happiness === "number"){
+    state.happiness = clamp(state.happiness + d.happiness, 0, 100);
+  }
+  if (d.tagsAdd) d.tagsAdd.forEach(t=>state.tags.add(t));
+  if (d.tagsDel) d.tagsDel.forEach(t=>state.tags.delete(t));
+  if (d.route) state.route = d.route;
+
+  const parts = [];
+  if (d.stats){
+    for (const [k,v] of Object.entries(d.stats)){
+      const cls = v >= 0 ? "good" : "bad";
+      const sign = v >= 0 ? "+" : "";
+      parts.push(`<span class="delta ${cls}">${statName(k)} ${sign}${v}</span>`);
+    }
+  }
+  if (typeof d.happiness === "number"){
+    const cls = d.happiness >= 0 ? "good" : "bad";
+    const sign = d.happiness >= 0 ? "+" : "";
+    parts.push(`<span class="delta ${cls}">幸福 ${sign}${d.happiness}</span>`);
+  }
+  if (d.note) parts.push(`<span class="warn">${escapeHtml(d.note)}</span>`);
+
+  if (parts.length) logLine(parts.join("，"));
+}
+
+function escapeHtml(s){
+  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+}
+
+function recordHappiness(){
+  // 每个节点记录一次幸福
+  const age = state.age;
+  const last = state.happinessSeries.at(-1);
+  if (!last || last.age !== age){
+    state.happinessSeries.push({ age, value: state.happiness });
+  } else {
+    last.value = state.happiness;
+  }
+}
+
+/** ================= 事件库（离谱版）=================
+ * 每个事件：when(state) -> bool
+ * choices: [{text, apply(state)}]
  */
 const EVENTS = [
   {
-    id: "born",
-    when: (s) => s.age === 0,
-    title: "你出生了",
-    desc: "欢迎来到这个世界。先选一个“天赋倾向”。",
-    choices: [
-      { text: "爱读书：智力 +2（但少点运动）", apply: (s)=>delta(s,{intel:+2,health:-1}) },
-      { text: "爱运动：健康 +2（但不太坐得住）", apply: (s)=>delta(s,{health:+2,intel:-1}) },
-      { text: "社交达人：魅力 +2（但有点贪玩）", apply: (s)=>delta(s,{charm:+2,intel:-1}) },
+    id:"born",
+    when: s => s.age === 0,
+    title:"你出生了（并且很离谱）",
+    desc:"护士看了你一眼：‘这孩子眼里有光——像 Wi-Fi 信号。’ 请选择你的初始天赋。",
+    choices:[
+      { text:"读书型：你会背圆周率但不会系鞋带", apply: s => delta({stats:{intel:+3, power:-1}, happiness:+1, note:"智力启动！"}) },
+      { text:"社交型：你对任何人都能喊一声‘家人们’", apply: s => delta({stats:{charm:+2, eq:+2}, happiness:+2}) },
+      { text:"玄学型：你一笑，窗外乌鸦就开始打字", apply: s => delta({stats:{luck:+3, intel:+1}, happiness:+0, note:"命运开始抖动"}) },
     ]
   },
   {
-    id: "primary",
-    when: (s) => s.age === 6,
-    title: "上小学了",
-    desc: "你开始接触系统学习。你更愿意把时间花在哪？",
-    choices: [
-      { text: "认真学习", apply: (s)=>delta(s,{intel:+2,happy:-1}) },
-      { text: "结交朋友", apply: (s)=>delta(s,{charm:+2,happy:+1}) },
-      { text: "运动社团", apply: (s)=>delta(s,{health:+2}) },
+    id:"childhood",
+    when: s => s.age === 6,
+    title:"6 岁：你第一次意识到人生是可选项",
+    desc:"你在幼儿园毕业典礼上，主持人让你说梦想。你会怎么说？",
+    choices:[
+      { text:"“我要当顶流！”（当场开始比心）", apply: s => delta({route:"INFLUENCER", tagsAdd:["比心怪"], stats:{charm:+2, eq:+1}, happiness:+3}) },
+      { text:"“我要修仙！”（并掏出一根葱当法器）", apply: s => delta({route:"CULTIVATION", tagsAdd:["葱门"], stats:{intel:+1, luck:+1}, happiness:+2}) },
+      { text:"“我要穿越！”（对着校门口的广告牌许愿）", apply: s => delta({route:"ISEKAI", tagsAdd:["穿越预备役"], stats:{luck:+2, power:+1}, happiness:+1}) },
     ]
   },
   {
-    id: "teen1",
-    when: (s) => s.age === 12,
-    title: "青春期的选择",
-    desc: "你逐渐有自己的想法。面对压力，你会怎么做？",
-    choices: [
-      { text: "卷起来：冲刺成绩", apply: (s)=>{ delta(s,{intel:+3,happy:-2}); s.tags.add("学霸"); } },
-      { text: "找个爱好：音乐/绘画/写作", apply: (s)=>{ delta(s,{charm:+1,intel:+1,happy:+2}); s.tags.add("艺术"); } },
-      { text: "打工攒钱：早点独立", apply: (s)=>{ delta(s,{money:+8,health:-1,happy:-1}); s.tags.add("早当家"); } },
+    id:"12_influencer",
+    when: s => s.age === 12 && s.route === "INFLUENCER",
+    title:"12 岁：你的视频爆了",
+    desc:"你发了个‘三秒学会写作业’视频，评论区开始喊你‘学习系网红’。",
+    choices:[
+      { text:"继续深耕：每天稳定更新", apply: s => delta({tagsAdd:["稳定更新"], stats:{charm:+2, eq:+1}, happiness:+2}) },
+      { text:"整活：挑战‘用鼻子写字’", apply: s => delta({tagsAdd:["整活大师"], stats:{charm:+1, luck:+1, power:-1}, happiness:+3, note:"鼻子：？"}) },
+      { text:"突然清醒：先把成绩搞上去", apply: s => delta({tagsAdd:["突然努力"], stats:{intel:+2, charm:-1}, happiness:-1}) },
     ]
   },
   {
-    id: "exam",
-    when: (s) => s.age === 15,
-    title: "关键考试",
-    desc: "你要不要拼一把？",
-    choices: [
-      { text: "闭关冲刺", apply: (s)=>delta(s,{intel:+3,happy:-2,health:-1}) },
-      { text: "稳扎稳打", apply: (s)=>delta(s,{intel:+1,happy:+0}) },
-      { text: "随缘吧（保持心态）", apply: (s)=>delta(s,{happy:+2,intel:-1}) },
+    id:"12_cultivation",
+    when: s => s.age === 12 && s.route === "CULTIVATION",
+    title:"12 岁：你加入‘葱门’修行",
+    desc:"师兄说：‘炼气先炼胃。’ 你要怎么修？",
+    choices:[
+      { text:"苦修：每天打坐 2 小时", apply: s => delta({tagsAdd:["苦修"], stats:{intel:+2, power:+1}, happiness:-1}) },
+      { text:"悟道：研究玄学与概率论", apply: s => delta({tagsAdd:["悟道"], stats:{intel:+2, luck:+1}, happiness:+1}) },
+      { text:"偷懒：把打坐时间拿来睡觉", apply: s => delta({tagsAdd:["睡仙"], stats:{power:+2}, happiness:+2, note:"你确实在长身体"}) },
     ]
   },
   {
-    id: "18",
-    when: (s) => s.age === 18,
-    title: "成年了",
-    desc: "你站在人生分岔路口：继续深造、直接工作、还是冒险一把？",
-    choices: [
-      { text: "上大学（长期投资）", apply: (s)=>{ s.tags.add("大学"); delta(s,{intel:+2,money:-2,happy:+1}); } },
-      { text: "直接工作（尽快赚钱）", apply: (s)=>{ s.tags.add("工作"); delta(s,{money:+10,health:-1}); } },
-      { text: "创业（高风险高回报）", apply: (s)=>{ s.tags.add("创业"); gambleStartup(s); } },
+    id:"12_isekai",
+    when: s => s.age === 12 && s.route === "ISEKAI",
+    title:"12 岁：第一次穿越失败",
+    desc:"你对着广告牌念咒语，结果只穿越到了隔壁小卖部。你学到了什么？",
+    choices:[
+      { text:"学技能：练体力，至少跑得快", apply: s => delta({tagsAdd:["跑得快"], stats:{power:+2}, happiness:+1}) },
+      { text:"学语言：万一穿去异世界要交流", apply: s => delta({tagsAdd:["语言天赋"], stats:{intel:+2, eq:+1}, happiness:+0}) },
+      { text:"学运气：每天摸一摸招财猫", apply: s => delta({tagsAdd:["玄学加成"], stats:{luck:+2}, happiness:+2}) },
     ]
   },
   {
-    id: "mid",
-    when: (s) => s.age === 22,
-    title: "22 岁的机会",
-    desc: "你遇到一次重要机会：选择会影响你未来的轨迹。",
-    choices: [
-      { text: "进大厂/稳定平台", apply: (s)=>{ s.tags.add("平台"); delta(s,{money:+12,intel:+1,happy:-1}); } },
-      { text: "加入初创团队", apply: (s)=>{ s.tags.add("初创"); delta(s,{money:+6,intel:+2,happy:+1,health:-1}); } },
-      { text: "考研/考公", apply: (s)=>{ s.tags.add("体制"); delta(s,{intel:+2,happy:-1}); } },
+    id:"15_common",
+    when: s => s.age === 15,
+    title:"15 岁：关键考试（但世界观正在漂移）",
+    desc:"你发现考场的钟表倒着走。你决定——",
+    choices:[
+      { text:"硬考：相信科学", apply: s => delta({stats:{intel:+2, eq:+1}, happiness:-1}) },
+      { text:"拜一下：相信玄学", apply: s => delta({stats:{luck:+2}, happiness:+1, note:"科学：你礼貌吗"}) },
+      { text:"当场直播：相信流量", apply: s => delta({stats:{charm:+2, eq:-1}, happiness:+2, note:"监考老师：？？"}) },
     ]
   },
   {
-    id: "health",
-    when: (s) => s.age === 25,
-    title: "健康警报",
-    desc: "你最近有点透支。你会怎么调整？",
-    choices: [
-      { text: "运动 + 作息：自律一波", apply: (s)=>delta(s,{health:+3,happy:+1,money:-2}) },
-      { text: "继续拼：先把钱赚了", apply: (s)=>delta(s,{money:+8,health:-3,happy:-1}) },
-      { text: "躺平旅行：给自己放个假", apply: (s)=>delta(s,{happy:+3,money:-6,health:+1}) },
+    id:"18_influencer",
+    when: s => s.age === 18 && s.route === "INFLUENCER",
+    title:"18 岁：你要不要签约 MCN？",
+    desc:"MCN 递来合同：‘我们负责资源，你负责灵魂（以及 KPI）。’",
+    choices:[
+      { text:"签约：资源拉满", apply: s => delta({tagsAdd:["签约MCN"], stats:{charm:+2, eq:+1}, happiness:+1}) },
+      { text:"不签：做独立创作者", apply: s => delta({tagsAdd:["独立"], stats:{intel:+1, charm:+1, luck:+1}, happiness:+2}) },
+      { text:"跑路：去读大学（假装自己很正常）", apply: s => delta({tagsAdd:["大学"], stats:{intel:+2, charm:-1}, happiness:+0, note:"你开始写论文标题：论比心的社会学意义"}) },
     ]
   },
   {
-    id: "end",
-    when: (s) => s.age === 30,
-    title: "阶段性结算",
-    desc: "30 岁了。回看这些年，你的人生会走向怎样的职业与未来？",
-    choices: [
-      { text: "查看结局", apply: (s)=>endGame(s) }
+    id:"18_cultivation",
+    when: s => s.age === 18 && s.route === "CULTIVATION",
+    title:"18 岁：筑基大考",
+    desc:"师父给你三条路：稳、快、或离谱。",
+    choices:[
+      { text:"稳扎稳打：正经筑基", apply: s => delta({tagsAdd:["筑基"], stats:{intel:+2, power:+1}, happiness:+0}) },
+      { text:"剑走偏锋：用运气强行突破", apply: s => delta({tagsAdd:["赌徒修仙"], stats:{luck:+3, power:-1}, happiness:+1}) },
+      { text:"当场顿悟：写一首诗突破", apply: s => delta({tagsAdd:["诗仙"], stats:{eq:+2, intel:+1}, happiness:+2, note:"你押韵押到了���道上"}) },
     ]
   },
+  {
+    id:"18_isekai",
+    when: s => s.age === 18 && s.route === "ISEKAI",
+    title:"18 岁：你真的穿越了",
+    desc:"你醒来发现自己在异世界——旁边的人说：‘勇者大人，先加个班。’",
+    choices:[
+      { text:"接受：成为异世界打工勇者", apply: s => delta({tagsAdd:["异世界打工"], stats:{power:+1, eq:+1}, happiness:-1}) },
+      { text:"反抗：我要当反派！", apply: s => delta({tagsAdd:["反派预备"], stats:{charm:+1, luck:+1}, happiness:+1}) },
+      { text:"摸鱼：先观察局势", apply: s => delta({tagsAdd:["摸鱼王"], stats:{intel:+2}, happiness:+2}) },
+    ]
+  },
+  {
+    id:"22_common",
+    when: s => s.age === 22,
+    title:"22 岁：命运给你一次‘开挂/不开挂’选择",
+    desc:"你遇到一个自称‘系统’的东西：‘绑定我，人生更爽，但代价你自己看着办。’",
+    choices:[
+      { text:"绑定系统：我想赢", apply: s => delta({tagsAdd:["绑定系统"], stats:{luck:+2, intel:+1}, happiness:+2, note:"系统：叮！"}) },
+      { text:"拒绝系统：我靠自己", apply: s => delta({tagsAdd:["硬核玩家"], stats:{eq:+2, power:+1}, happiness:+1}) },
+      { text:"把系统卖了：变现才是正义", apply: s => delta({tagsAdd:["变现鬼才"], stats:{charm:+1, eq:-1}, happiness:+3, note:"系统：？？？"}) },
+    ]
+  },
+  {
+    id:"26_common",
+    when: s => s.age === 26,
+    title:"26 岁：现实来敲门（用脚踹的）",
+    desc:"你开始认真思考：我到底擅长什么？",
+    choices:[
+      { text:"提升技能：学点真本事", apply: s => delta({tagsAdd:["技能提升"], stats:{intel:+2, eq:+1}, happiness:+1}) },
+      { text:"提升身体：健康就是版本答案", apply: s => delta({tagsAdd:["健身"], stats:{power:+2}, happiness:+1}) },
+      { text:"提升运气：买彩票（科学理财）", apply: s => delta({tagsAdd:["彩票研究"], stats:{luck:+2}, happiness:+0, note:"理财：你礼貌吗"}) },
+    ]
+  },
+  {
+    id:"30_end",
+    when: s => s.age === 30,
+    title:"30 岁：结算（离谱宇宙版）",
+    desc:"你站在 30 岁的门口，系统弹出结算页。你的职业与未来将被生成。",
+    choices:[
+      { text:"生成结局报告", apply: s => endGame() }
+    ]
+  }
 ];
 
-/** ====== 规则与工具函数 ====== */
-function clamp(n, lo, hi){ return Math.max(lo, Math.min(hi, n)); }
-
-function delta(s, d){
-  for (const [k, v] of Object.entries(d)){
-    s.stats[k] = clamp(s.stats[k] + v, -20, 999);
-  }
-  logLine(s, formatDelta(d));
-}
-
-function formatDelta(d){
-  const map = { intel:"智力", charm:"魅力", health:"健康", money:"金钱", happy:"幸福" };
-  const parts = [];
-  for (const [k, v] of Object.entries(d)){
-    const name = map[k] || k;
-    const cls = v >= 0 ? "good" : "bad";
-    const sign = v >= 0 ? "+" : "";
-    parts.push(`<span class="delta ${cls}">${name} ${sign}${v}</span>`);
-  }
-  return parts.join("，");
-}
-
-function logLine(s, html){
-  s.log.push(html);
-  const logEl = document.getElementById("log");
-  logEl.innerHTML = s.log.map(x => `<p>· ${x}</p>`).join("");
-  logEl.scrollTop = logEl.scrollHeight;
-}
-
-function pickEvent(s){
-  // 找到第一个满足条件的事件
-  return EVENTS.find(e => e.when(s));
-}
-
-function nextYear(s){
-  s.age += 1;
-  s.turn += 1;
-}
-
-function gambleStartup(s){
-  // 简单概率：智力/魅力越高成功率越高
-  const base = 0.25;
-  const bonus = (s.stats.intel + s.stats.charm) * 0.02; // 约 0~0.4
-  const p = Math.max(0.05, Math.min(0.85, base + bonus));
-  const roll = Math.random();
-  if (roll < p){
-    logLine(s, `创业成了！你拿到一轮融资。`);
-    delta(s, { money:+25, happy:+2, intel:+1 });
-  } else {
-    logLine(s, `创业失败……但你学到了很多。`);
-    delta(s, { money:-6, happy:-1, intel:+2 });
-  }
-}
-
-function ending(s){
-  const st = s.stats;
-  const tags = s.tags;
-
-  // 非常简化的结局判定（你可以继续扩展成很多结局）
-  if (st.health <= 0) {
-    return {
-      job: "健康管理师（被迫转型）",
-      future: "你意识到身体才是最大的本钱。未来几年你把生活重心放在恢复、规律与长期主义上。"
-    };
-  }
-
-  if (tags.has("体制") && st.intel >= 8) {
-    return {
-      job: "公务员 / 事业编",
-      future: "你追求稳定与秩序。未来节奏平稳，生活可预期，积累人脉与资源，适合长期规划。"
-    };
-  }
-
-  if (tags.has("创业") && st.money >= 25) {
-    return {
-      job: "创业者 / 产品负责人",
-      future: "你在不确定中找机会。未来可能大起大落，但你的成长速度很快，越挫越强。"
-    };
-  }
-
-  if (st.intel >= 12) {
-    return {
-      job: "工程师 / 研究员",
-      future: "你擅长用理性拆解问题。未来会靠专业能力持续升级，适合走技术/学术深耕路线。"
-    };
-  }
-
-  if (st.charm >= 12) {
-    return {
-      job: "市场/销售/内容创作者",
-      future: "你能影响他人、建立连接。未来会在表达与协作中获得机会，人脉会成为你的杠杆。"
-    };
-  }
-
-  if (st.money >= 25) {
-    return {
-      job: "投资/生意人",
-      future: "你更敏感于回报和资源配置。未来你会不断做选择题：风险、收益、时间与自由。"
-    };
-  }
-
-  // 默认
-  return {
-    job: "普通上班族",
-    future: "你走了一条相对常见但稳妥的路。未来的关键在于：你愿意为哪件事持续投入 3 年以上。"
-  };
-}
-
-function endGame(s){
-  const end = ending(s);
-  s.ended = true;
-
-  const title = `结局：${end.job}`;
-  const summary = `
-    <div class="endTitle">${title}</div>
-    <div class="eventDesc">${end.future}</div>
-    <div class="eventDesc">最终属性：智力 ${s.stats.intel}｜魅力 ${s.stats.charm}｜健康 ${s.stats.health}｜金钱 ${s.stats.money}｜幸福 ${s.stats.happy}</div>
-  `;
-  logLine(s, `—— 结局生成 ——`);
-  logLine(s, summary);
-
-  // 把主面板变成“结局页”
-  document.getElementById("eventTitle").textContent = title;
-  document.getElementById("eventDesc").textContent = end.future;
-  document.getElementById("choices").innerHTML = `<button class="primary" id="again">再来一局</button>`;
-  document.getElementById("again").onclick = () => reset();
+/** ================= 渲染 ================= */
+function renderTop(){
+  document.getElementById("age").textContent = state.age;
+  document.getElementById("turn").textContent = state.turn;
+  document.getElementById("route").textContent = routeName(state.route);
+  document.getElementById("tags").textContent = state.tags.size ? Array.from(state.tags).join("、") : "无";
 }
 
 function renderStats(){
-  const map = [
-    ["intel","智力"],
-    ["charm","魅力"],
-    ["health","健康"],
-    ["money","金钱"],
-    ["happy","幸福"],
-  ];
   const statsEl = document.getElementById("stats");
-  statsEl.innerHTML = map.map(([k, label]) => `
+  const items = [
+    ["intel","智力"],["charm","魅力"],["power","体力"],["eq","情商"],["luck","运气"],
+    ["happy","幸福（0-100）"]
+  ];
+  const temp = { ...state.stats, happy: state.happiness };
+  statsEl.innerHTML = items.map(([k,label]) => `
     <div class="stat">
       <div class="k">${label}</div>
-      <div class="v">${state.stats[k]}</div>
+      <div class="v">${temp[k]}</div>
     </div>
   `).join("");
 }
 
-function renderTop(){
-  document.getElementById("age").textContent = state.age;
-  document.getElementById("turn").textContent = state.turn;
-  document.getElementById("tags").textContent = state.tags.size ? Array.from(state.tags).join("、") : "无";
+function pickEvent(){
+  return EVENTS.find(e => e.when(state));
 }
 
 function renderEvent(){
   if (state.ended) return;
 
-  const e = pickEvent(state);
+  const e = pickEvent();
   if (!e){
-    // 没有事件：自动过一年（你也可以改成随机事件）
-    nextYear(state);
-    renderAll();
+    // 没事件：跳下一个节点
+    gotoNextNode();
     return;
   }
 
@@ -355,33 +367,15 @@ function renderEvent(){
     btn.textContent = ch.text;
     if (idx === 0) btn.classList.add("primary");
     btn.onclick = () => {
-      // 记录事件
-      logLine(state, `<b>${state.age} 岁</b>：${e.title} → 你选择了「${escapeHtml(ch.text)}」`);
+      logLine(`<b>${state.age} 岁</b>：${escapeHtml(e.title)} → 你选择了「${escapeHtml(ch.text)}」`);
       ch.apply(state);
-
-      // 事件触发后：年龄推进到下一年（结局事件不推进）
-      if (e.id !== "end") nextYear(state);
-
+      recordHappiness();
+      // 结局事件不推进
+      if (!state.ended && e.id !== "30_end") gotoNextNode();
       renderAll();
     };
     choicesEl.appendChild(btn);
   });
-}
-
-function escapeHtml(str){
-  return str.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-}
-
-function reset(){
-  state.age = 0;
-  state.turn = 0;
-  state.stats = { intel:5, charm:5, health:5, money:0, happy:5 };
-  state.tags = new Set();
-  state.ended = false;
-  state.log = [];
-  document.getElementById("log").innerHTML = "";
-  logLine(state, "新的人生开始了。");
-  renderAll();
 }
 
 function renderAll(){
@@ -390,7 +384,223 @@ function renderAll(){
   renderEvent();
 }
 
+/** ================= 进度控制 ================= */
+function syncNode(){
+  state.age = NODES[state.nodeIdx];
+  state.turn = state.nodeIdx;
+}
+
+function gotoNextNode(){
+  state.nodeIdx = Math.min(state.nodeIdx + 1, NODES.length - 1);
+  syncNode();
+}
+
+/** ================= 结局与报告 ================= */
+function scoreRouteBias(){
+  const st = state.stats;
+  let influencer = st.charm * 2 + st.eq + st.luck + (state.tags.has("签约MCN") ? 6 : 0) + (state.tags.has("整活大师") ? 3 : 0);
+  let cultivation = st.intel * 2 + st.luck + st.power + (state.tags.has("筑基") ? 6 : 0) + (state.tags.has("苦修") ? 2 : 0);
+  let isekai = st.luck * 2 + st.power + st.eq + (state.tags.has("绑定系统") ? 5 : 0) + (state.tags.has("异世界打工") ? 2 : 0);
+
+  return { influencer, cultivation, isekai };
+}
+
+function chooseEnding(){
+  const st = state.stats;
+  const { influencer, cultivation, isekai } = scoreRouteBias();
+
+  // 主路线：如果玩家早期已定 route，就优先，但属性/标签也可能“反杀”
+  let primary = state.route;
+  if (!primary){
+    // 没定路线就按分数
+    primary = (influencer >= cultivation && influencer >= isekai) ? "INFLUENCER"
+            : (cultivation >= isekai) ? "CULTIVATION"
+            : "ISEKAI";
+  }
+
+  // 生成称号
+  let title = "";
+  let job = "";
+  let future = "";
+
+  if (primary === "INFLUENCER"){
+    if (st.charm >= 12 && st.eq >= 10){
+      job = "顶流网红 / 品牌主理人";
+      title = "【全网家人们的精神股东】";
+      future = "你靠内容与连接吃饭：一边涨粉一边自我怀疑。未来 3 年你会经历一次人设崩塌危机，但也会学会真正的边界感。";
+    } else {
+      job = "中腰部创作者";
+      title = "【努力营业但不太红】";
+      future = "你在流量海里学会游泳。未来你要么找到细分赛道一飞冲天，要么转去做幕后（剪辑/运营/商务）成为‘别人的贵人’。";
+    }
+  } else if (primary === "CULTIVATION"){
+    if (st.intel >= 12 && st.luck >= 10){
+      job = "修仙老祖（概率论方向）";
+      title = "【天道都要给你算一卦】";
+      future = "你把‘运气’训练成了学科。未来你会在关键时刻踩中风口（或者雷），但你总能用智力把锅变成机会。";
+    } else {
+      job = "门派骨干 / 外门长老";
+      title = "【看起来很强其实更能扛事】";
+      future = "你不一定最耀眼，但很稳。未来你会带新人、守资源、处理烂摊子——然后在某一天突然悟了，发现自己早就变强了。";
+    }
+  } else { // ISEKAI
+    if (st.luck >= 12 && state.tags.has("绑定系统")){
+      job = "异世界开挂勇者（带 KPI）";
+      title = "【系统认证的卷王】";
+      future = "你把开挂玩成了绩效。未来你会获得一次‘回到现实/留在异世界’的选择：无论选哪个，你都会后悔一天，然后继续卷。";
+    } else {
+      job = "异世界生存专家";
+      title = "【不靠挂也能苟到最后】";
+      future = "你靠观察、沟通与体力通关。未来你会成为一个‘哪里都能活’的人：换城市、换行业、换世界观，你都能快速适应。";
+    }
+  }
+
+  // 幸福评价
+  const h = state.happiness;
+  const mood = h >= 75 ? "总体很快乐"
+            : h >= 55 ? "还算过得去"
+            : h >= 35 ? "有点拧巴"
+            : "看起来需要一个长假";
+
+  return { job, title, future, mood };
+}
+
+function renderChart(){
+  const wrap = document.getElementById("chartWrap");
+  const chart = document.getElementById("chart");
+
+  if (!state.happinessSeries.length) { wrap.hidden = true; return; }
+  wrap.hidden = false;
+
+  const pts = state.happinessSeries;
+  const W = 360, H = 140, pad = 18;
+  const xs = pts.map((_,i)=> i);
+  const minX = 0, maxX = Math.max(1, xs.length - 1);
+  const minY = 0, maxY = 100;
+
+  const x = (i)=> pad + ( (i - minX) / (maxX - minX) ) * (W - pad*2);
+  const y = (v)=> pad + (1 - ( (v - minY) / (maxY - minY) )) * (H - pad*2);
+
+  const d = pts.map((p,i)=> `${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
+  const labels = pts.map((p,i)=> `<text x="${x(i)}" y="${H-4}" text-anchor="middle" font-size="10" fill="rgba(255,255,255,.55)">${p.age}</text>`).join("");
+
+  chart.innerHTML = `
+  <svg width="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
+        <stop offset="0" stop-color="#2a6bff" stop-opacity="0.9"/>
+        <stop offset="1" stop-color="#2ee59d" stop-opacity="0.25"/>
+      </linearGradient>
+    </defs>
+    <rect x="0" y="0" width="${W}" height="${H}" rx="10" fill="rgba(255,255,255,.03)"/>
+    <path d="M ${d.replaceAll(" ", " L ")}" fill="none" stroke="url(#g)" stroke-width="3"/>
+    ${pts.map((p,i)=> `<circle cx="${x(i)}" cy="${y(p.value)}" r="3.8" fill="#e9eeff" opacity="0.95"/>`).join("")}
+    ${labels}
+    <text x="${pad}" y="${pad}" font-size="10" fill="rgba(255,255,255,.6)">幸福</text>
+    <text x="${W-pad}" y="${pad}" text-anchor="end" font-size="10" fill="rgba(255,255,255,.6)">100</text>
+  </svg>
+  `;
+}
+
+function endGame(){
+  state.ended = true;
+  const end = chooseEnding();
+
+  logLine(`<span class="warn">—— 结局生成 ——</span>`);
+  logLine(`<div class="endTitle">结局：${escapeHtml(end.job)}</div>`);
+  logLine(`<b>${escapeHtml(end.title)}</b>`);
+  logLine(`${escapeHtml(end.future)}`);
+  logLine(`幸福状态：<b>${escapeHtml(end.mood)}</b>（当前幸福 ${state.happiness}/100）`);
+  logLine(`最终属性：智力 ${state.stats.intel}｜魅力 ${state.stats.charm}｜体力 ${state.stats.power}｜情商 ${state.stats.eq}｜运气 ${state.stats.luck}`);
+
+  // 关键选择回放
+  if (state.historyChoices.length){
+    const lines = state.historyChoices.map(x => `${x.age} 岁：${x.title} → ${x.choice}`).join("<br/>");
+    logLine(`<div class="mono" style="margin-top:6px">关键选择回放：<br/>${lines}</div>`);
+  }
+
+  renderChart();
+
+  document.getElementById("eventTitle").textContent = `结局：${end.job}`;
+  document.getElementById("eventDesc").textContent = `${end.title}｜${end.mood}`;
+  document.getElementById("choices").innerHTML = `
+    <button class="primary" id="again">再来一局</button>
+    <button id="share">复制分享文案</button>
+  `;
+
+  document.getElementById("again").onclick = () => reset();
+  document.getElementById("share").onclick = async () => {
+    const text =
+`我在《人生模拟器：离谱宇宙》跑出了结局：
+${end.job}
+${end.title}
+幸福：${state.happiness}/100
+属性：智力${state.stats.intel} 魅力${state.stats.charm} 体力${state.stats.power} 情商${state.stats.eq} 运气${state.stats.luck}
+（GitHub Pages 游戏）`;
+    try{
+      await navigator.clipboard.writeText(text);
+      alert("已复制到剪贴板！");
+    }catch(e){
+      prompt("复制下面这段：", text);
+    }
+  };
+}
+
+/** ================= 初始化与按钮 ================= */
+function reset(){
+  state.nodeIdx = 0;
+  state.age = 0;
+  state.turn = 0;
+  state.route = null;
+  state.tags = new Set();
+  state.stats = { intel:5, charm:5, power:5, eq:5, luck:5 };
+  state.happiness = 50;
+  state.happinessSeries = [];
+  state.historyChoices = [];
+  state.ended = false;
+  state.log = [];
+  document.getElementById("log").innerHTML = "";
+  document.getElementById("chartWrap").hidden = true;
+
+  logLine("新的人生开始了。请选择你的离谱天赋。");
+  syncNode();
+  recordHappiness();
+  renderAll();
+}
+
+// 拦截选择，顺便记录“关键选择回放”
+(function patchChoiceRecording(){
+  // 在渲染事件时记录选择文本（通过事件点击里补）
+  const originalRenderEvent = renderEvent;
+  window.renderEvent = function(){
+    const e = pickEvent();
+    if (!e || state.ended) return originalRenderEvent();
+
+    // 重写渲染以插入回放记录
+    document.getElementById("eventTitle").textContent = e.title;
+    document.getElementById("eventDesc").textContent = e.desc;
+
+    const choicesEl = document.getElementById("choices");
+    choicesEl.innerHTML = "";
+    e.choices.forEach((ch, idx) => {
+      const btn = document.createElement("button");
+      btn.textContent = ch.text;
+      if (idx === 0) btn.classList.add("primary");
+      btn.onclick = () => {
+        state.historyChoices.push({ age: state.age, title: e.title, choice: ch.text });
+        logLine(`<b>${state.age} 岁</b>：${escapeHtml(e.title)} → 你选择了「${escapeHtml(ch.text)}」`);
+        ch.apply(state);
+        recordHappiness();
+        if (!state.ended && e.id !== "30_end") gotoNextNode();
+        renderAll();
+      };
+      choicesEl.appendChild(btn);
+    });
+  };
+})();
+
 document.getElementById("restart").onclick = () => reset();
+document.getElementById("skip").onclick = () => { if (!state.ended){ gotoNextNode(); recordHappiness(); renderAll(); } };
 
 reset();
 </script>
