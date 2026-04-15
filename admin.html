@@ -11,7 +11,7 @@
       --text:#eaf0ff;--muted:#a9b6d3;
       --btn:#2a68ff;--btn2:#25365f;
       --line:rgba(255,255,255,.10);
-      --bad:#ff4d6d;
+      --bad:#ff4d6d;--good:#2ee59d;--warn:#ffd166;
       --shadow:0 18px 60px rgba(0,0,0,.45);
     }
     *{box-sizing:border-box}
@@ -44,9 +44,37 @@
     summary::-webkit-details-marker{display:none}
     .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px;color:var(--muted);font-size:13px}
     .tag{display:inline-flex;gap:6px;align-items:center;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
-    .qa{margin-top:10px;display:grid;gap:10px}
-    .q{padding:10px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.18)}
-    .q b{display:block;margin-bottom:6px}
+    .qa{margin-top:10px;display:grid;gap:12px}
+    .q{
+      padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.10);
+      background:rgba(0,0,0,.18)
+    }
+    .q b{display:block;margin-bottom:8px}
+    .opts{display:grid;gap:8px;margin-top:10px}
+    .opt{
+      padding:9px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+      display:flex;gap:10px;align-items:flex-start;
+      line-height:1.5;
+    }
+    .opt .k{
+      width:22px;height:22px;border-radius:8px;
+      display:inline-flex;align-items:center;justify-content:center;
+      font-weight:900;flex:0 0 auto;
+      background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.10);
+      color:var(--muted);
+      margin-top:1px;
+    }
+    .opt.selected{
+      border-color:rgba(46,229,157,.55);
+      background:rgba(46,229,157,.10);
+    }
+    .opt.selected .k{
+      color:var(--good);
+      border-color:rgba(46,229,157,.55);
+      background:rgba(46,229,157,.12);
+    }
+    .small{font-size:13px}
     a{color:#9cc4ff}
   </style>
 </head>
@@ -55,7 +83,7 @@
   <div class="top">
     <div>
       <h1>管理员面板</h1>
-      <div class="sub">这里会显示所有人提交的答题记录（按时间倒序）。</div>
+      <div class="sub">显示所有提交记录（按时间倒序），每题会展示 A/B/C/D 全部选项，并高亮用户选择。</div>
       <div class="sub">返回：<a href="./index.html">与亮的默契度</a></div>
     </div>
     <div class="row">
@@ -97,8 +125,18 @@ window.addEventListener("DOMContentLoaded", () => {
   const fmtTime = (ms)=>{
     try{ return new Date(ms).toLocaleString(); }catch{ return String(ms); }
   };
+  const ABCD = ["A","B","C","D"];
 
   let all = [];
+
+  function escapeHtml(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#39;");
+  }
 
   function render(){
     const kw = $("kw").value.trim().toLowerCase();
@@ -115,24 +153,64 @@ window.addEventListener("DOMContentLoaded", () => {
       const title = `${item.name || "(无称呼)"} · ${item.fakeScore ?? "--"}%`;
       det.innerHTML = `
         <summary>
-          <div style="font-weight:1000">${title}</div>
+          <div style="font-weight:1000">${escapeHtml(title)}</div>
           <div class="meta">
-            <span class="tag">时间：${fmtTime(item.createdAt)}</span>
-            <span class="tag">docId：${item.id}</span>
+            <span class="tag">时间：${escapeHtml(fmtTime(item.createdAt))}</span>
+            <span class="tag">docId：${escapeHtml(item.id)}</span>
           </div>
         </summary>
         <div class="qa" id="qa_${item.id}"></div>
       `;
 
       const qa = det.querySelector(`#qa_${item.id}`);
+
       const detailed = item.detailed || {};
       const keys = Object.keys(detailed).sort((a,b)=>Number(a.slice(1))-Number(b.slice(1)));
+
       for (const k of keys){
-        const d = detailed[k];
-        const div = document.createElement("div");
-        div.className = "q";
-        div.innerHTML = `<b>${d.question || k}</b><div class="muted">选择：${d.option ?? "(空)"}（index=${d.index ?? "?"}）</div>`;
-        qa.appendChild(div);
+        const d = detailed[k] || {};
+        const qDiv = document.createElement("div");
+        qDiv.className = "q";
+
+        // 本题用户选择 index（可能为空）
+        const pickedIndex = Number.isFinite(d.index) ? d.index : null;
+
+        // 从 answers/detailed 里尽力拿到本题的所有选项：
+        // - 旧数据可能没有 allOptions（我们按“当前存的 option 只能知道一个”）
+        // - 新数据如果想100%显示A/B/C/D文本，建议 index.html 以后写入 allOptions（我也可以给你改）
+        const allOptions = Array.isArray(d.allOptions) && d.allOptions.length ? d.allOptions : null;
+
+        let optsHtml = "";
+        if (allOptions){
+          optsHtml = `<div class="opts">${
+            allOptions.slice(0,4).map((optText, i) => {
+              const selected = (pickedIndex === i) ? "selected" : "";
+              return `
+                <div class="opt ${selected}">
+                  <div class="k">${ABCD[i] ?? i}</div>
+                  <div>${escapeHtml(optText)}</div>
+                </div>
+              `;
+            }).join("")
+          }</div>`;
+        } else {
+          // 兼容旧数据：没有 allOptions 时，只能显示“选了哪个选项文字”
+          optsHtml = `<div class="muted small">（提示：旧记录未保存本题全部选项，只能显示用户所选。）</div>
+                      <div class="opts">
+                        <div class="opt selected">
+                          <div class="k">${pickedIndex === null ? "?" : (ABCD[pickedIndex] ?? pickedIndex)}</div>
+                          <div>${escapeHtml(d.option ?? "(空)")}</div>
+                        </div>
+                      </div>`;
+        }
+
+        qDiv.innerHTML = `
+          <b>${escapeHtml(d.question || k)}</b>
+          <div class="muted small">用户选择：${pickedIndex === null ? "未作答" : (ABCD[pickedIndex] ?? pickedIndex)}</div>
+          ${optsHtml}
+        `;
+
+        qa.appendChild(qDiv);
       }
 
       list.appendChild(det);
