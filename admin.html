@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>管理员 - submissions</title>
+  <style>
+    :root{
+      --bg1:#050a14;--bg2:#0b1430;
+      --card:rgba(18,28,55,.75);
+      --text:#eaf0ff;--muted:#a9b6d3;
+      --btn:#2a68ff;--btn2:#25365f;
+      --line:rgba(255,255,255,.10);
+      --bad:#ff4d6d;
+      --shadow:0 18px 60px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+      background:
+        radial-gradient(900px 500px at 15% 10%, rgba(42,104,255,.22), transparent 60%),
+        radial-gradient(700px 500px at 85% 25%, rgba(46,229,157,.14), transparent 60%),
+        linear-gradient(180deg,var(--bg1),var(--bg2));
+      min-height:100vh;
+    }
+    .wrap{max-width:1100px;margin:22px auto;padding:0 16px}
+    .top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    h1{margin:0;font-size:20px}
+    .sub{margin:6px 0 0;color:var(--muted);line-height:1.6}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow);backdrop-filter: blur(10px);}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    input{
+      flex:1;max-width:320px;padding:12px;border-radius:14px;border:1px solid var(--line);
+      background:rgba(255,255,255,.06);color:var(--text);outline:none
+    }
+    button{border:0;border-radius:14px;padding:12px 14px;background:var(--btn2);color:var(--text);font-weight:900;cursor:pointer}
+    button.primary{background:linear-gradient(135deg,#2a68ff,#3b7bff)}
+    .muted{color:var(--muted)}
+    .err{color:var(--bad);font-weight:900;margin:12px 0 0}
+    .list{margin-top:14px;display:grid;gap:12px}
+    details{border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.05);padding:12px}
+    summary{cursor:pointer;list-style:none}
+    summary::-webkit-details-marker{display:none}
+    .meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:6px;color:var(--muted);font-size:13px}
+    .tag{display:inline-flex;gap:6px;align-items:center;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+    .qa{margin-top:10px;display:grid;gap:10px}
+    .q{padding:10px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.18)}
+    .q b{display:block;margin-bottom:6px}
+    a{color:#9cc4ff}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div>
+      <h1>管理员面板</h1>
+      <div class="sub">这里会显示所有人提交的答题记录（按时间倒序）。</div>
+      <div class="sub">返回答题页：<a href="./index.html">index.html</a></div>
+    </div>
+    <div class="row">
+      <input id="kw" placeholder="搜索称呼（模糊匹配）" />
+      <button class="primary" id="reload">刷新</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="justify-content:space-between">
+      <div class="muted" id="count">加载中…</div>
+      <div class="muted" id="last"></div>
+    </div>
+
+    <p class="err" id="err"></p>
+    <div class="list" id="list"></div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAaBNaiA9CRHgea6b4huJmRihsRdzrEFl8",
+  authDomain: "friend-quiz-c6a8b.firebaseapp.com",
+  projectId: "friend-quiz-c6a8b",
+  storageBucket: "friend-quiz-c6a8b.firebasestorage.app",
+  messagingSenderId: "1081335961814",
+  appId: "1:1081335961814:web:5686ad4d7a08e3246f5177",
+  measurementId: "G-31VZSML6ZJ"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const $ = (id)=>document.getElementById(id);
+const fmtTime = (ms)=>{
+  try{
+    const d = new Date(ms);
+    return d.toLocaleString();
+  }catch{ return String(ms); }
+};
+
+let all = [];
+
+function render(){
+  const kw = $("kw").value.trim().toLowerCase();
+  const list = $("list");
+  list.innerHTML = "";
+
+  const data = kw ? all.filter(x => (x.name||"").toLowerCase().includes(kw)) : all;
+
+  $("count").textContent = `共 ${data.length} 条记录（总计 ${all.length}）`;
+  if (data[0]?.createdAt) $("last").textContent = `最新：${fmtTime(data[0].createdAt)}`;
+  else $("last").textContent = "";
+
+  for (const item of data){
+    const det = document.createElement("details");
+    const title = `${item.name || "(无称呼)"} · ${item.fakeScore || "--"}%`;
+    det.innerHTML = `
+      <summary>
+        <div style="font-weight:1000">${title}</div>
+        <div class="meta">
+          <span class="tag">时间：${fmtTime(item.createdAt)}</span>
+          <span class="tag">UA：${(item.ua||"").slice(0,60)}${(item.ua||"").length>60?"…":""}</span>
+          <span class="tag">docId：${item.id}</span>
+        </div>
+      </summary>
+      <div class="qa" id="qa_${item.id}"></div>
+    `;
+
+    const qa = det.querySelector(`#qa_${item.id}`);
+    const detailed = item.detailed || {};
+    const keys = Object.keys(detailed).sort((a,b)=>Number(a.slice(1))-Number(b.slice(1)));
+    for (const k of keys){
+      const d = detailed[k];
+      const div = document.createElement("div");
+      div.className = "q";
+      div.innerHTML = `<b>${d.question || k}</b><div class="muted">选择：${d.option ?? "(空)"}（index=${d.index ?? "?"}）</div>`;
+      qa.appendChild(div);
+    }
+
+    list.appendChild(det);
+  }
+}
+
+async function load(){
+  $("err").textContent = "";
+  $("count").textContent = "加载中…";
+  $("list").innerHTML = "";
+
+  const qy = query(collection(db, "submissions"), orderBy("createdAt", "desc"));
+  const snap = await getDocs(qy);
+  all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  render();
+}
+
+$("kw").addEventListener("input", render);
+$("reload").addEventListener("click", load);
+
+load().catch(e => {
+  $("err").textContent = e?.message || String(e);
+  $("count").textContent = "加载失败";
+});
+</script>
+</body>
+</html>
