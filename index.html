@@ -5,60 +5,142 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>小问卷</title>
   <style>
-    :root{--card:#111b2e;--text:#e7eefc;--muted:#a9b6d3;--btn:#2a68ff;--btn2:#243055;--line:rgba(255,255,255,.08);--good:#2ee59d;--bad:#ff4d6d}
+    :root{
+      --bg1:#050a14;--bg2:#0b1430;
+      --card:rgba(18,28,55,.75);
+      --text:#eaf0ff;--muted:#a9b6d3;
+      --btn:#2a68ff;--btn2:#25365f;
+      --line:rgba(255,255,255,.10);
+      --good:#2ee59d;--bad:#ff4d6d;--warn:#ffd166;
+      --shadow:0 18px 60px rgba(0,0,0,.45);
+    }
     *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#071027,#0b1220);color:var(--text);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif}
-    .wrap{max-width:900px;margin:22px auto;padding:0 16px}
-    h1{margin:0 0 6px}
-    .sub{color:var(--muted);line-height:1.6;margin:0 0 14px}
-    .card{background:rgba(17,27,46,.92);border:1px solid var(--line);border-radius:14px;padding:16px}
+    body{
+      margin:0; color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
+      background:
+        radial-gradient(900px 500px at 15% 10%, rgba(42,104,255,.25), transparent 60%),
+        radial-gradient(700px 500px at 85% 25%, rgba(46,229,157,.18), transparent 60%),
+        linear-gradient(180deg,var(--bg1),var(--bg2));
+      min-height:100vh;
+    }
+    .wrap{max-width:960px;margin:22px auto;padding:0 16px}
+    .top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:14px}
+    h1{margin:0;font-size:22px;letter-spacing:.3px}
+    .sub{margin:6px 0 0;color:var(--muted);line-height:1.65}
+    .badge{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;
+      background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+    .card{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      padding:16px;
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(10px);
+    }
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    input[type="text"]{flex:1;max-width:320px;padding:10px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text)}
+    input[type="text"]{
+      flex:1;max-width:360px;padding:12px 12px;border-radius:14px;border:1px solid var(--line);
+      background:rgba(255,255,255,.06);color:var(--text);outline:none;
+    }
+    button{
+      border:0;border-radius:14px;padding:12px 14px;background:var(--btn2);color:var(--text);
+      font-weight:900;cursor:pointer
+    }
+    button.primary{background:linear-gradient(135deg,#2a68ff,#3b7bff)}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .hint{color:var(--muted);margin:10px 0 0;line-height:1.6}
+    .err{color:var(--bad);font-weight:900;margin:10px 0 0}
     .q{padding:14px 0;border-top:1px solid var(--line)}
     .q:first-child{border-top:0}
-    .qt{font-weight:900}
+    .qt{font-weight:1000}
     .opts{display:grid;gap:10px;margin-top:10px}
-    label{display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);
-      padding:10px 12px;border-radius:12px;cursor:pointer}
+    label{
+      display:flex;gap:10px;align-items:flex-start;
+      background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
+      padding:10px 12px;border-radius:14px;cursor:pointer;
+      transition:transform .05s ease, border-color .15s ease, background .15s ease;
+    }
+    label:hover{transform:translateY(-1px);border-color:rgba(42,104,255,.45)}
     input{margin-top:3px}
-    button{border:0;border-radius:12px;padding:12px 14px;background:var(--btn2);color:var(--text);font-weight:900;cursor:pointer}
-    button.primary{background:var(--btn)}
-    button:disabled{opacity:.5;cursor:not-allowed}
-    .result{margin-top:14px;padding:14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
-    .score{font-size:34px;font-weight:1000}
-    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(46,229,157,.18);color:var(--good);font-weight:900}
+    .progress{
+      height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid var(--line);
+      margin:14px 0 10px;
+    }
+    .bar{height:100%;width:0%;background:linear-gradient(90deg,#2a68ff,#2ee59d);transition:width .25s ease}
+    .ptext{display:flex;justify-content:space-between;color:var(--muted);font-size:13px}
+    .result{
+      margin-top:14px;padding:14px;border-radius:18px;border:1px solid var(--line);
+      background:rgba(255,255,255,.05)
+    }
+    .score{font-size:40px;font-weight:1100;letter-spacing:.5px}
+    .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 12px;border-radius:999px;font-weight:1000;border:1px solid var(--line)}
+    .pill.good{background:rgba(46,229,157,.15);color:var(--good)}
+    .pill.warn{background:rgba(255,209,102,.14);color:var(--warn)}
     .muted{color:var(--muted)}
-    .err{color:var(--bad);font-weight:900}
+    .grid2{display:grid;grid-template-columns:1fr;gap:12px}
+    @media (min-width: 860px){ .grid2{grid-template-columns:1.2fr .8fr} }
+    .mini{
+      border:1px solid var(--line);border-radius:18px;padding:14px;background:rgba(255,255,255,.04)
+    }
+    .copy{
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px
+    }
+    code{
+      background:rgba(0,0,0,.25);padding:3px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.08)
+    }
   </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>小问卷</h1>
-  <p class="sub">请先输入你的称呼，然后完成 20 题。提交后会生成一个结果。</p>
+  <div class="top">
+    <div>
+      <h1>小问卷</h1>
+      <p class="sub">先写一个称呼，然后答��� 20 题。提交后会生成一个结果（仅供娱乐）。</p>
+    </div>
+    <div class="badge">📝 约 2~4 分钟</div>
+  </div>
 
   <div class="card">
-    <!-- 前置：输入称呼 -->
-    <div id="pre">
-      <div class="row" style="justify-content:space-between">
-        <div class="muted">请输入你的称呼：</div>
-        <input id="name" type="text" maxlength="20" placeholder="比如：小明" />
-        <button class="primary" id="start">开始答题</button>
-      </div>
-      <p class="muted" style="margin:10px 0 0">提示：提交后同一设备只能提交一次。</p>
-      <p id="preErr" class="err" style="margin-top:10px"></p>
-    </div>
-
-    <!-- 锁定提示 -->
     <div id="locked" class="result" hidden>
       <div class="muted">你已经提交过一次啦（本设备）。</div>
       <div class="score"><span id="lockedPct">--</span>%</div>
-      <div class="pill" id="lockedBadge"></div>
-      <div class="muted" style="margin-top:8px">谢谢参与～</div>
+      <div class="pill good" id="lockedBadge"></div>
+      <div class="muted" style="margin-top:10px">谢谢你认真做完～</div>
     </div>
 
-    <!-- 正式问卷 -->
+    <div id="pre">
+      <div class="grid2">
+        <div>
+          <div class="row" style="justify-content:space-between">
+            <div class="muted">请输入你的称呼：</div>
+          </div>
+          <div class="row" style="margin-top:10px">
+            <input id="name" type="text" maxlength="20" placeholder="比如：小明" />
+            <button class="primary" id="start">开始答题</button>
+          </div>
+          <p class="hint">提示：提交后同一设备只能提交一次。你也可以把链接转发给别人一起玩。</p>
+          <p id="preErr" class="err"></p>
+        </div>
+        <div class="mini">
+          <div style="font-weight:1000;margin-bottom:6px">小提示</div>
+          <div class="muted" style="line-height:1.7">
+            - 选你第一反应就好<br>
+            - 不需要想太久<br>
+            - 结果只是一个好玩的“彩蛋”
+          </div>
+          <div class="muted" style="margin-top:10px">（管理员入口：在称呼里输入 <code>亮亮亮亮</code>）</div>
+        </div>
+      </div>
+    </div>
+
     <div id="form" hidden>
+      <div class="progress"><div class="bar" id="bar"></div></div>
+      <div class="ptext">
+        <div id="pleft">进度：0/20</div>
+        <div class="muted">选完所有题再提交</div>
+      </div>
+
       <div id="quiz"></div>
 
       <div class="row" style="margin-top:14px">
@@ -67,11 +149,24 @@
       </div>
       <p id="error" class="err" style="margin-top:12px"></p>
 
+      <div id="calculating" class="result" hidden>
+        <div class="muted">正在计算你的结果…</div>
+        <div class="progress" style="margin-top:10px"><div class="bar" id="calcBar"></div></div>
+      </div>
+
       <div id="result" class="result" hidden>
-        <div class="muted">你的结果：</div>
+        <div class="muted">你的结果（仅供娱乐）：</div>
         <div class="score"><span id="pct">70</span>%</div>
-        <div class="pill" id="badge">默契度还可以</div>
-        <div class="muted" style="margin-top:8px">谢谢你认真作答！</div>
+        <div class="pill good" id="badge">默契度不错</div>
+
+        <div class="muted" style="margin-top:12px;line-height:1.8" id="praise">
+          你做题的时候很认真，而且选择很“有边界感”。谢谢你愿意花时间回答这些小问题～
+        </div>
+
+        <div class="copy">
+          <button id="copyText">复制分享文案</button>
+          <span class="muted" id="copyState"></span>
+        </div>
       </div>
     </div>
   </div>
@@ -81,7 +176,9 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
-/** 你的 Firebase 配置（已按你发的内容填好） */
+const ADMIN_CODE = "亮亮亮亮";
+const LOCK_KEY = "friend_quiz_lock_v2";
+
 const firebaseConfig = {
   apiKey: "AIzaSyAaBNaiA9CRHgea6b4huJmRihsRdzrEFl8",
   authDomain: "friend-quiz-c6a8b.firebaseapp.com",
@@ -118,27 +215,26 @@ const QUESTIONS = [
   { id:"q20", text:"如果你在伴侣面前突然哭了，你最不希望对方做的是？", options:["不停问“怎么了”“别哭了”","试图讲道理分析原因","不知所措，愣在原地","说“这有什么好哭的”"] },
 ];
 
-const LOCK_KEY = "friend_quiz_lock_v1";
-
 const $ = (id)=>document.getElementById(id);
-const pre = $("pre");
-const preErr = $("preErr");
-const form = $("form");
-const locked = $("locked");
-const lockedPct = $("lockedPct");
-const lockedBadge = $("lockedBadge");
 
-function setStatus(t){ $("status").textContent = t || ""; }
-function setError(t){ $("error").textContent = t || ""; }
-
+function loadLock(){
+  try{ return JSON.parse(localStorage.getItem(LOCK_KEY) || "null"); }catch{ return null; }
+}
+function saveLock(lock){
+  localStorage.setItem(LOCK_KEY, JSON.stringify(lock));
+}
 function badgeText(pct){
   return pct >= 80 ? "默契很强" : pct >= 75 ? "默契度不错" : "默契度还可以";
 }
-
 function fakeResult(){
   const pool = [70, 75, 80];
   const pct = pool[Math.floor(Math.random() * pool.length)];
   return { pct, badge: badgeText(pct) };
+}
+function praiseText(pct){
+  if (pct >= 80) return "你真的很会表达需求，也很会照顾关系的温度。能和你相处的人会很舒服～感谢你认真作答！";
+  if (pct >= 75) return "你的选择很稳定，也很有自己的节奏感。谢谢你愿意花时间把这些问题认真做完～";
+  return "你给出的答案很真诚，也很有自我觉察。谢谢你参与这份小问卷，今天辛苦啦～";
 }
 
 function renderQuiz(){
@@ -161,51 +257,51 @@ function renderQuiz(){
 function getAnswers(){
   const ans = {};
   for (const q of QUESTIONS){
-    const picked = document.querySelector(`input[name="q_${q.id}"]:checked`);
+    const picked = document.querySelector(\`input[name="q_\${q.id}"]:checked\`);
     ans[q.id] = picked ? Number(picked.value) : null;
   }
   return ans;
 }
-
+function answeredCount(answers){
+  let c = 0;
+  for (const q of QUESTIONS) if (answers[q.id] !== null) c++;
+  return c;
+}
 function allAnswered(answers){
   return QUESTIONS.every(q => answers[q.id] !== null);
 }
-
-function loadLock(){
-  try{ return JSON.parse(localStorage.getItem(LOCK_KEY) || "null"); }catch(e){ return null; }
-}
-function saveLock(lock){
-  localStorage.setItem(LOCK_KEY, JSON.stringify(lock));
-}
-
-function showLocked(lock){
-  pre.hidden = true;
-  form.hidden = true;
-  locked.hidden = false;
-  lockedPct.textContent = String(lock.pct);
-  lockedBadge.textContent = lock.badge;
+function updateProgress(){
+  const answers = getAnswers();
+  const n = answeredCount(answers);
+  $("pleft").textContent = `进度：${n}/${QUESTIONS.length}`;
+  $("bar").style.width = `${Math.round((n/QUESTIONS.length)*100)}%`;
 }
 
-function showQuiz(){
-  pre.hidden = true;
-  locked.hidden = true;
-  form.hidden = false;
-}
-
+// 管理员入口：称呼=亮亮亮亮 → admin.html
 $("start").addEventListener("click", () => {
-  preErr.textContent = "";
+  $("preErr").textContent = "";
   const name = $("name").value.trim();
+
   if (!name){
-    preErr.textContent = "请先输入称呼。";
+    $("preErr").textContent = "请先输入称呼。";
     return;
   }
-  sessionStorage.setItem("friend_quiz_name_v1", name);
-  showQuiz();
+  if (name === ADMIN_CODE){
+    location.href = "./admin.html";
+    return;
+  }
+
+  sessionStorage.setItem("friend_quiz_name_v2", name);
+  $("pre").hidden = true;
+  $("form").hidden = false;
+  updateProgress();
 });
 
+$("quiz")?.addEventListener("change", updateProgress);
+
 $("submit").addEventListener("click", async () => {
-  setError("");
-  setStatus("");
+  $("error").textContent = "";
+  $("status").textContent = "";
 
   const lock = loadLock();
   if (lock?.done){
@@ -213,20 +309,21 @@ $("submit").addEventListener("click", async () => {
     return;
   }
 
-  const name = (sessionStorage.getItem("friend_quiz_name_v1") || "").trim();
+  const name = (sessionStorage.getItem("friend_quiz_name_v2") || "").trim();
   if (!name){
-    setError("称呼丢失了，请刷新重新输入。");
+    $("error").textContent = "称呼丢失了，请刷新重新输入。";
     return;
   }
 
   const answers = getAnswers();
   if (!allAnswered(answers)){
-    setError("还有题没选完哦，选完才能提交。");
+    $("error").textContent = "还有题没选完哦，选完才能提交。";
     return;
   }
 
   const fake = fakeResult();
 
+  // 详细答案（含文字）
   const detailed = {};
   for (const q of QUESTIONS){
     const idx = answers[q.id];
@@ -234,7 +331,7 @@ $("submit").addEventListener("click", async () => {
   }
 
   $("submit").disabled = true;
-  setStatus("提交中…");
+  $("status").textContent = "提交中…";
 
   try{
     await addDoc(collection(db, "submissions"), {
@@ -246,22 +343,60 @@ $("submit").addEventListener("click", async () => {
       detailed
     });
 
+    // 过渡动效：计算中
+    $("calculating").hidden = false;
+    $("calcBar").style.width = "0%";
+    await new Promise(r => setTimeout(r, 80));
+    $("calcBar").style.width = "100%";
+    await new Promise(r => setTimeout(r, 1100));
+    $("calculating").hidden = true;
+
+    // 本地锁
     const lockObj = { done: true, pct: fake.pct, badge: fake.badge };
     saveLock(lockObj);
 
+    // 展示结果
     $("pct").textContent = String(fake.pct);
     $("badge").textContent = fake.badge;
+    $("praise").textContent = praiseText(fake.pct);
     $("result").hidden = false;
-    setStatus("提交成功，谢谢！");
+    $("status").textContent = "提交成功！";
   }catch(e){
-    setError(e?.message || String(e));
+    $("error").textContent = e?.message || String(e);
   }finally{
     $("submit").disabled = false;
-    setStatus("");
+    $("status").textContent = "";
+  }
+});
+
+function showLocked(lock){
+  $("pre").hidden = true;
+  $("form").hidden = true;
+  $("locked").hidden = false;
+  $("lockedPct").textContent = String(lock.pct);
+  $("lockedBadge").textContent = lock.badge;
+}
+
+// 复制分享文案
+$("copyText").addEventListener("click", async () => {
+  const text =
+`我刚做完一个小问卷，结果还挺有意思的～你也来试试：
+${location.href}
+
+（填个称呼就能开始）`;
+  try{
+    await navigator.clipboard.writeText(text);
+    $("copyState").textContent = "已复制，可直接粘贴发送～";
+    setTimeout(()=> $("copyState").textContent = "", 2000);
+  }catch{
+    $("copyState").textContent = "复制失败：请手动复制地址栏链接。";
+    setTimeout(()=> $("copyState").textContent = "", 2500);
   }
 });
 
 renderQuiz();
+
+// 启动：如果已提交过就锁定显示
 const lock = loadLock();
 if (lock?.done) showLocked(lock);
 </script>
