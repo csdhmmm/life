@@ -11,7 +11,7 @@
       --text:#eaf0ff;--muted:#a9b6d3;
       --btn:#2a68ff;--btn2:#25365f;
       --line:rgba(255,255,255,.10);
-      --bad:#ff4d6d;--good:#2ee59d;--warn:#ffd166;
+      --bad:#ff4d6d;--good:#2ee59d;
       --shadow:0 18px 60px rgba(0,0,0,.45);
     }
     *{box-sizing:border-box}
@@ -83,7 +83,7 @@
   <div class="top">
     <div>
       <h1>管理员面板</h1>
-      <div class="sub">显示所有提交记录（按时间倒序），每题会展示 A/B/C/D 全部选项，并高亮用户选择。</div>
+      <div class="sub">每题展示 A/B/C/D 全部选项，并高亮用户选择（需要新记录包含 allOptions）。</div>
       <div class="sub">返回：<a href="./index.html">与亮的默契度</a></div>
     </div>
     <div class="row">
@@ -169,19 +169,14 @@ window.addEventListener("DOMContentLoaded", () => {
 
       for (const k of keys){
         const d = detailed[k] || {};
+        const pickedIndex = Number.isFinite(d.index) ? d.index : null;
+        const allOptions = Array.isArray(d.allOptions) ? d.allOptions : null;
+
         const qDiv = document.createElement("div");
         qDiv.className = "q";
 
-        // 本题用户选择 index（可能为空）
-        const pickedIndex = Number.isFinite(d.index) ? d.index : null;
-
-        // 从 answers/detailed 里尽力拿到本题的所有选项：
-        // - 旧数据可能没有 allOptions（我们按“当前存的 option 只能知道一个”）
-        // - 新数据如果想100%显示A/B/C/D文本，建议 index.html 以后写入 allOptions（我也可以给你改）
-        const allOptions = Array.isArray(d.allOptions) && d.allOptions.length ? d.allOptions : null;
-
         let optsHtml = "";
-        if (allOptions){
+        if (allOptions && allOptions.length){
           optsHtml = `<div class="opts">${
             allOptions.slice(0,4).map((optText, i) => {
               const selected = (pickedIndex === i) ? "selected" : "";
@@ -194,14 +189,16 @@ window.addEventListener("DOMContentLoaded", () => {
             }).join("")
           }</div>`;
         } else {
-          // 兼容旧数据：没有 allOptions 时，只能显示“选了哪个选项文字”
-          optsHtml = `<div class="muted small">（提示：旧记录未保存本题全部选项，只能显示用户所选。）</div>
-                      <div class="opts">
-                        <div class="opt selected">
-                          <div class="k">${pickedIndex === null ? "?" : (ABCD[pickedIndex] ?? pickedIndex)}</div>
-                          <div>${escapeHtml(d.option ?? "(空)")}</div>
-                        </div>
-                      </div>`;
+          // 旧记录兼容
+          optsHtml = `
+            <div class="muted small">（旧记录未保存 allOptions，无法展示 A/B/C/D 全部选项）</div>
+            <div class="opts">
+              <div class="opt selected">
+                <div class="k">${pickedIndex === null ? "?" : (ABCD[pickedIndex] ?? pickedIndex)}</div>
+                <div>${escapeHtml(d.option ?? "(空)")}</div>
+              </div>
+            </div>
+          `;
         }
 
         qDiv.innerHTML = `
@@ -209,7 +206,6 @@ window.addEventListener("DOMContentLoaded", () => {
           <div class="muted small">用户选择：${pickedIndex === null ? "未作答" : (ABCD[pickedIndex] ?? pickedIndex)}</div>
           ${optsHtml}
         `;
-
         qa.appendChild(qDiv);
       }
 
