@@ -11,7 +11,7 @@
       --text:#eaf0ff;--muted:#a9b6d3;
       --btn:#2a68ff;--btn2:#25365f;
       --line:rgba(255,255,255,.10);
-      --good:#2ee59d;--bad:#ff4d6d;--warn:#ffd166;
+      --good:#2ee59d;--bad:#ff4d6d;
       --shadow:0 18px 60px rgba(0,0,0,.45);
     }
     *{box-sizing:border-box}
@@ -59,9 +59,7 @@
       display:flex;gap:10px;align-items:flex-start;
       background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);
       padding:10px 12px;border-radius:14px;cursor:pointer;
-      transition:transform .05s ease, border-color .15s ease, background .15s ease;
     }
-    label:hover{transform:translateY(-1px);border-color:rgba(42,104,255,.45)}
     input{margin-top:3px}
     .progress{
       height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid var(--line);
@@ -77,11 +75,6 @@
     .pill{display:inline-flex;gap:8px;align-items:center;padding:6px 12px;border-radius:999px;font-weight:1000;border:1px solid var(--line)}
     .pill.good{background:rgba(46,229,157,.15);color:var(--good)}
     .muted{color:var(--muted)}
-    .grid2{display:grid;grid-template-columns:1fr;gap:12px}
-    @media (min-width: 860px){ .grid2{grid-template-columns:1.2fr .8fr} }
-    .mini{
-      border:1px solid var(--line);border-radius:18px;padding:14px;background:rgba(255,255,255,.04)
-    }
     .copy{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
   </style>
 </head>
@@ -104,25 +97,13 @@
     </div>
 
     <div id="pre">
-      <div class="grid2">
-        <div>
-          <div class="muted">请输入你的称呼：</div>
-          <div class="row" style="margin-top:10px">
-            <input id="name" type="text" maxlength="20" placeholder="比如：小明" />
-            <button class="primary" id="start">开始答题</button>
-          </div>
-          <p class="hint">提示：提交后同一设备只能提交一次。你也可以把链接转发给别人一起玩。</p>
-          <p id="preErr" class="err"></p>
-        </div>
-        <div class="mini">
-          <div style="font-weight:1000;margin-bottom:6px">小提示</div>
-          <div class="muted" style="line-height:1.7">
-            - 选你第一反应就好<br>
-            - 不需要想太久<br>
-            - 结果只是一个好玩的“彩蛋”
-          </div>
-        </div>
+      <div class="muted">请输入你的称呼：</div>
+      <div class="row" style="margin-top:10px">
+        <input id="name" type="text" maxlength="20" placeholder="比如：小明" />
+        <button class="primary" id="start">开始答题</button>
       </div>
+      <p class="hint">提示：提交后同一设备只能提交一次。</p>
+      <p id="preErr" class="err"></p>
     </div>
 
     <div id="form" hidden>
@@ -141,7 +122,7 @@
       <p id="error" class="err" style="margin-top:12px"></p>
 
       <div id="calculating" class="result" hidden>
-        <div class="muted">正在计算你的结果…</div>
+        <div class="muted">正在提交并计算结果…</div>
         <div class="progress" style="margin-top:10px"><div class="bar" id="calcBar"></div></div>
       </div>
 
@@ -161,26 +142,19 @@
   </div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+<script>
+(() => {
+  // ====== 已从你给的预填充链接提取并填好 ======
+  const FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSevecyN8BcHuGIHBfU_6xE4Dovy1WVqFQMleQwUmaM1ZNVv9Q/formResponse";
+  const ENTRY_NAME = "entry.1104238744";
+  const ENTRY_PAYLOAD = "entry.1565106394";
 
-window.addEventListener("DOMContentLoaded", () => {
+  // 管理员口令（页面不展示；你自己知道即可）
   const ADMIN_CODE = "亮亮亮亮";
-  const LOCK_KEY = "friend_quiz_lock_v4";
+  // 你可以把这里换成你关联的 Google 表格链接（用于你自己查看）
+  const ADMIN_SHEET_URL = ""; // 例如：https://docs.google.com/spreadsheets/d/xxxxx/edit
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAaBNaiA9CRHgea6b4huJmRihsRdzrEFl8",
-    authDomain: "friend-quiz-c6a8b.firebaseapp.com",
-    projectId: "friend-quiz-c6a8b",
-    storageBucket: "friend-quiz-c6a8b.firebasestorage.app",
-    messagingSenderId: "1081335961814",
-    appId: "1:1081335961814:web:5686ad4d7a08e3246f5177",
-    measurementId: "G-31VZSML6ZJ"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const LOCK_KEY = "friend_quiz_lock_google_v2";
 
   const QUESTIONS = [
     { id:"q1", text:"在一段关系中，你认为“被爱”最核心的体现是？", options:["对方愿意为你花大量时间","对方能记住并理解你的情绪","对方在重要选择上优先考虑你","对方愿意为你改变自己"] },
@@ -189,32 +163,28 @@ window.addEventListener("DOMContentLoaded", () => {
     { id:"q4", text:"你更能接受以下哪种“不完美”？", options:["对方偶尔忘记重要日期","对方收入暂时不高但努力","对方不擅长浪漫和惊喜","对方有自己很坚持的小癖好"] },
     { id:"q5", text:"对于“共同进步”，你的真实态度是？", options:["必须两人步调一致，否则容易散","可以不同步，但要互相支持不拖累","各拼各的，顶峰相见就好","我不需要他多优秀，陪伴更重要"] },
     { id:"q6", text:"当你和另一半意见严重不合时，你最希望最终如何收场？", options:["谁有道理听谁的","他主动让步，哄我一下","各退一步，找折中方案","暂时搁置，不伤感情为先"] },
-    { id:"q7", text:"你认为另一半最不该在你们关系中做的事是？", options:["对你撒谎（哪怕是善意的）","在外人面前贬低或忽视你","冷战超过两天不沟通","拿你和别人比较"] },
+    { id:"q7", text:"你认为另一半最不该在你们关系中做的事是？", options:["对你撒谎（哪怕是善意��）","在外人面前贬低或忽视你","冷战超过两天不沟通","拿你和别人比较"] },
     { id:"q8", text:"你最希望另一半如何对待你的社交圈（朋友/闺蜜）？", options:["积极融入，成为大家的朋友","保持礼貌距离，不干涉就好","完全信任，不需要过多接触","偶尔一起聚会，但尊重各自空间"] },
     { id:"q9", text:"关于“金钱观”，你最在意对方的是？", options:["愿意为你花钱的程度","是否有储蓄和规划的习惯","不隐瞒收入和债务","消费观与你大致相同（比如该省省该花花）"] },
     { id:"q10", text:"你认为“浪漫”最让你心动的一种形式是？", options:["精心策划的惊喜（如生日派对、旅行）","日常的小动作（倒杯水、盖好被子）","认真听你说话并记住细节","偶尔写一封信或送不贵但有心的礼物"] },
-    { id:"q11", text:"当你们进入长期稳定关系后，你最怕出现的感觉是？", options:["无聊，像合租室友","压抑，不敢表达真实想法","被理所当然地忽视","看不到未来的方向"] },
+    { id:"q11", text:"当你们进入长期稳定关系后，你最怕出现的感觉是？", options:["无聊，像合租室友","压抑，不敢表达真实想法","��理所当然地忽视","看不到未来的方向"] },
     { id:"q12", text:"如果另一半工作特别忙、持续一个月无法陪你，你希望他怎么做？", options:["提前解释清楚，并给出结束时间","再忙每天也发一条消息或语音","忙完后用整块时间补偿你","带你进入他的工作，让你参与一部分"] },
     { id:"q13", text:"你心里认为“好的伴侣”更像以下哪种角色？", options:["战友——一起打怪升级","港湾——让你安心休息","镜子——帮你看到真实的自己","玩伴——让生活轻松有趣"] },
-    { id:"q14", text:"如果满分是10分，你希望你���关系中“独立空间”占几分？", options:["1-2分（几乎完全黏在一起）","3-5分（偶尔各自做事）","6-8分（各有爱好，但常分享）","9-10分（高度独立，精神契合即可）"] },
+    { id:"q14", text:"如果满分是10分，你希望你们关系中“独立空间”占几分？", options:["1-2分（几乎完全黏在一起）","3-5分（偶尔各自做事）","6-8分（各有爱好，但常分享）","9-10分（高度独立，精神契合即可）"] },
     { id:"q15", text:"用一句话总结：你最深层的渴望是对方能给你______？", options:["坚定不移的选择","无条件的接纳","持续的成长动力","平淡里的温暖"] },
     { id:"q16", text:"关于家里的整洁程度，你的真实态度是？", options:["必须井井有条，不然会烦躁","差不多就行，一周大扫除一次","乱中有序，我知道东西在哪就行","完全无所谓，开心就好"] },
-    { id:"q17", text:"吵完架��后，你更希望对方用什么方式让关系回温？", options:["直接过来说“对不起”，不翻旧账","用行动示好，比如做顿饭或买个奶茶","隔半天再像没事人一样聊别的话题","写一段话把感受说清楚，再一起翻篇"] },
+    { id:"q17", text:"吵完架之后，你更希望对方用什么方式让关系回温？", options:["直接过来说“对不起”，不翻旧账","用行动示好，比如做顿饭或买个奶茶","隔半天再像没事人一样聊别的话题","写一段话把感受说清楚，再一起翻篇"] },
     { id:"q18", text:"你更喜欢对方用哪种方式表达“我想你”？", options:["直接说“我想你了”","发一张正在做的事的照片","突然出现或约你见面","分享一首歌或一段话"] },
-    { id:"q19", text:"对于“分享日常小事”，你的态度是？", options:["希望对方事无巨细都跟我分享","有趣或特别的才分享，不用天天报备","不太爱分享琐事，更想聊有深度的","对方主动分享我���开心，但我很少主动"] },
+    { id:"q19", text:"对于“分享日常小事”，你的态度是？", options:["希望对方事无巨细都跟我分享","有趣或特别的才分享，不用天天报备","不太爱分享琐事，更想聊有深度的","对方主动分享我会开心，但我很少主动"] },
     { id:"q20", text:"如果你在伴侣面前突然哭了，你最不希望对方做的是？", options:["不停问“怎么了”“别哭了”","试图讲道理分析原因","不知所措，愣在原地","说“这有什么好哭的”"] },
   ];
 
-  const $ = (id) => document.getElementById(id);
+  const $ = (id)=>document.getElementById(id);
 
-  function loadLock(){
-    try{ return JSON.parse(localStorage.getItem(LOCK_KEY) || "null"); }catch{ return null; }
-  }
-  function saveLock(lock){ localStorage.setItem(LOCK_KEY, JSON.stringify(lock)); }
   function badgeText(pct){ return pct >= 80 ? "默契很强" : pct >= 75 ? "默契度不错" : "默契度还可以"; }
   function fakeResult(){
     const pool = [70, 75, 80];
-    const pct = pool[Math.floor(Math.random() * pool.length)];
+    const pct = pool[Math.floor(Math.random()*pool.length)];
     return { pct, badge: badgeText(pct) };
   }
   function praiseText(pct){
@@ -222,6 +192,11 @@ window.addEventListener("DOMContentLoaded", () => {
     if (pct >= 75) return "你的选择很稳定，也很有自己的节奏感。谢谢你愿意花时间完成～";
     return "你给出的答案很真诚，也很有自我觉察。谢谢参与，今天辛苦啦～";
   }
+
+  function loadLock(){
+    try{ return JSON.parse(localStorage.getItem(LOCK_KEY) || "null"); }catch{ return null; }
+  }
+  function saveLock(lock){ localStorage.setItem(LOCK_KEY, JSON.stringify(lock)); }
 
   function renderQuiz(){
     $("quiz").innerHTML = QUESTIONS.map((q, idx) => {
@@ -249,15 +224,10 @@ window.addEventListener("DOMContentLoaded", () => {
     return ans;
   }
 
-  function answeredCount(answers){
-    let c = 0;
-    for (const q of QUESTIONS) if (answers[q.id] !== null) c++;
-    return c;
-  }
-  function allAnswered(answers){ return QUESTIONS.every(q => answers[q.id] !== null); }
   function updateProgress(){
     const answers = getAnswers();
-    const n = answeredCount(answers);
+    let n = 0;
+    for (const q of QUESTIONS) if (answers[q.id] !== null) n++;
     $("pleft").textContent = `进度：${n}/${QUESTIONS.length}`;
     $("bar").style.width = `${Math.round((n/QUESTIONS.length)*100)}%`;
   }
@@ -273,15 +243,15 @@ window.addEventListener("DOMContentLoaded", () => {
   $("start").addEventListener("click", () => {
     $("preErr").textContent = "";
     const name = $("name").value.trim();
-    if (!name){
-      $("preErr").textContent = "请先输入称呼。";
-      return;
-    }
+    if (!name){ $("preErr").textContent = "请先输入称呼。"; return; }
+
     if (name === ADMIN_CODE){
-      location.href = "./admin.html";
+      if (ADMIN_SHEET_URL && ADMIN_SHEET_URL.startsWith("http")) location.href = ADMIN_SHEET_URL;
+      else alert("管理员链接未配置（需要你把 ADMIN_SHEET_URL 填成你的表格链接）。");
       return;
     }
-    sessionStorage.setItem("friend_quiz_name_v4", name);
+
+    sessionStorage.setItem("friend_quiz_name_google_v2", name);
     $("pre").hidden = true;
     $("form").hidden = false;
     updateProgress();
@@ -296,44 +266,53 @@ window.addEventListener("DOMContentLoaded", () => {
     const lock = loadLock();
     if (lock?.done){ showLocked(lock); return; }
 
-    const name = (sessionStorage.getItem("friend_quiz_name_v4") || "").trim();
+    const name = (sessionStorage.getItem("friend_quiz_name_google_v2") || "").trim();
     if (!name){ $("error").textContent = "称呼丢失了，请刷新重新输入。"; return; }
 
     const answers = getAnswers();
-    if (!allAnswered(answers)){ $("error").textContent = "还有题没选完哦，选完才能提交。"; return; }
+    for (const q of QUESTIONS){
+      if (answers[q.id] === null){
+        $("error").textContent = "还有题没选完哦，选完才能提交。";
+        return;
+      }
+    }
 
     const fake = fakeResult();
 
-    // 关键：这里开始保存 allOptions（A/B/C/D 全选项）给管理员页展示
-    const detailed = {};
+    const lines = [];
+    lines.push(`score=${fake.pct}`);
+    lines.push(`time=${new Date().toISOString()}`);
+    lines.push(`name=${name}`);
+    lines.push("");
     for (const q of QUESTIONS){
       const idx = answers[q.id];
-      detailed[q.id] = {
-        index: idx,
-        option: q.options[idx],
-        question: q.text,
-        allOptions: q.options  // ✅ 新增：保存本题全部选项
-      };
+      lines.push(`${q.id}. ${q.text}`);
+      lines.push(`- choice: ${String.fromCharCode(65+idx)}. ${q.options[idx]}`);
+      lines.push(`- options: ${q.options.map((t,i)=>`${String.fromCharCode(65+i)}.${t}`).join(" | ")}`);
+      lines.push("");
     }
+    const payload = lines.join("\n");
 
     $("submit").disabled = true;
     $("status").textContent = "提交中…";
 
     try{
-      await addDoc(collection(db, "submissions"), {
-        name,
-        createdAt: Date.now(),
-        ua: navigator.userAgent,
-        fakeScore: fake.pct,
-        answers,
-        detailed
+      const body = new URLSearchParams();
+      body.set(ENTRY_NAME, name);
+      body.set(ENTRY_PAYLOAD, payload);
+
+      await fetch(FORM_ACTION, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8" },
+        body
       });
 
       $("calculating").hidden = false;
       $("calcBar").style.width = "0%";
       await new Promise(r => setTimeout(r, 60));
       $("calcBar").style.width = "100%";
-      await new Promise(r => setTimeout(r, 1100));
+      await new Promise(r => setTimeout(r, 900));
       $("calculating").hidden = true;
 
       saveLock({ done:true, pct: fake.pct, badge: fake.badge });
@@ -343,7 +322,7 @@ window.addEventListener("DOMContentLoaded", () => {
       $("praise").textContent = praiseText(fake.pct);
       $("result").hidden = false;
     }catch(e){
-      $("error").textContent = e?.message || String(e);
+      $("error").textContent = (e && e.message) ? e.message : String(e);
     }finally{
       $("submit").disabled = false;
       $("status").textContent = "";
@@ -369,7 +348,7 @@ ${location.href}
   renderQuiz();
   const lock = loadLock();
   if (lock?.done) showLocked(lock);
-});
+})();
 </script>
 </body>
 </html>
