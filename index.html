@@ -76,6 +76,12 @@
     .pill.good{background:rgba(46,229,157,.15);color:var(--good)}
     .muted{color:var(--muted)}
     .copy{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+    .link{
+      padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04); color:var(--text);
+      text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+      font-weight:900;
+    }
   </style>
 </head>
 <body>
@@ -139,22 +145,32 @@
         </div>
       </div>
     </div>
+
+    <div class="result" style="margin-top:14px">
+      <div class="muted">如果你想直接用 Google 表单填写，也可以用这个链接：</div>
+      <div class="row" style="margin-top:10px">
+        <a class="link" id="formsLink" href="#" target="_blank" rel="noopener">打开 Google 表单</a>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
 (() => {
-  // ====== 已从你给的预填充链接提取并填好 ======
+  // ====== 你表单的参数（已填好） ======
   const FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSevecyN8BcHuGIHBfU_6xE4Dovy1WVqFQMleQwUmaM1ZNVv9Q/formResponse";
   const ENTRY_NAME = "entry.1104238744";
   const ENTRY_PAYLOAD = "entry.1565106394";
+  const PUBLIC_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSevecyN8BcHuGIHBfU_6xE4Dovy1WVqFQMleQwUmaM1ZNVv9Q/viewform";
 
   // 管理员口令（页面不展示；你自己知道即可）
   const ADMIN_CODE = "亮亮亮亮";
-  // 你可以把这里换成你关联的 Google 表格链接（用于你自己查看）
+
+  // 你可以把这里换成“关联的 Google 表格链接”（可留空，不影响做题）
   const ADMIN_SHEET_URL = ""; // 例如：https://docs.google.com/spreadsheets/d/xxxxx/edit
 
-  const LOCK_KEY = "friend_quiz_lock_google_v2";
+  // 同设备一次
+  const LOCK_KEY = "friend_quiz_lock_google_v3";
 
   const QUESTIONS = [
     { id:"q1", text:"在一段关系中，你认为“被爱”最核心的体现是？", options:["对方愿意为你花大量时间","对方能记住并理解你的情绪","对方在重要选择上优先考虑你","对方愿意为你改变自己"] },
@@ -163,11 +179,11 @@
     { id:"q4", text:"你更能接受以下哪种“不完美”？", options:["对方偶尔忘记重要日期","对方收入暂时不高但努力","对方不擅长浪漫和惊喜","对方有自己很坚持的小癖好"] },
     { id:"q5", text:"对于“共同进步”，你的真实态度是？", options:["必须两人步调一致，否则容易散","可以不同步，但要互相支持不拖累","各拼各的，顶峰相见就好","我不需要他多优秀，陪伴更重要"] },
     { id:"q6", text:"当你和另一半意见严重不合时，你最希望最终如何收场？", options:["谁有道理听谁的","他主动让步，哄我一下","各退一步，找折中方案","暂时搁置，不伤感情为先"] },
-    { id:"q7", text:"你认为另一半最不该在你们关系中做的事是？", options:["对你撒谎（哪怕是善意��）","在外人面前贬低或忽视你","冷战超过两天不沟通","拿你和别人比较"] },
+    { id:"q7", text:"你认为另一半最不该在你们关系中做的事是？", options:["对你撒谎（哪怕是善意的）","在外人面前贬低或忽视你","冷战超过两天不沟通","拿你和别人比较"] },
     { id:"q8", text:"你最希望另一半如何对待你的社交圈（朋友/闺蜜）？", options:["积极融入，成为大家的朋友","保持礼貌距离，不干涉就好","完全信任，不需要过多接触","偶尔一起聚会，但尊重各自空间"] },
     { id:"q9", text:"关于“金钱观”，你最在意对方的是？", options:["愿意为你花钱的程度","是否有储蓄和规划的习惯","不隐瞒收入和债务","消费观与你大致相同（比如该省省该花花）"] },
     { id:"q10", text:"你认为“浪漫”最让你心动的一种形式是？", options:["精心策划的惊喜（如生日派对、旅行）","日常的小动作（倒杯水、盖好被子）","认真听你说话并记住细节","偶尔写一封信或送不贵但有心的礼物"] },
-    { id:"q11", text:"当你们进入长期稳定关系后，你最怕出现的感觉是？", options:["无聊，像合租室友","压抑，不敢表达真实想法","��理所当然地忽视","看不到未来的方向"] },
+    { id:"q11", text:"当你们进入长期稳定关系后，你最怕出现的感觉是？", options:["无聊，像合租室友","压抑，不敢表达真实想法","被理所当然地忽视","看不到未来的方向"] },
     { id:"q12", text:"如果另一半工作特别忙、持续一个月无法陪你，你希望他怎么做？", options:["提前解释清楚，并给出结束时间","再忙每天也发一条消息或语音","忙完后用整块时间补偿你","带你进入他的工作，让你参与一部分"] },
     { id:"q13", text:"你心里认为“好的伴侣”更像以下哪种角色？", options:["战友——一起打怪升级","港湾——让你安心休息","镜子——帮你看到真实的自己","玩伴——让生活轻松有趣"] },
     { id:"q14", text:"如果满分是10分，你希望你们关系中“独立空间”占几分？", options:["1-2分（几乎完全黏在一起）","3-5分（偶尔各自做事）","6-8分（各有爱好，但常分享）","9-10分（高度独立，精神契合即可）"] },
@@ -240,6 +256,9 @@
     $("lockedBadge").textContent = lock.badge;
   }
 
+  // 公开表单链接按钮
+  document.getElementById("formsLink").href = PUBLIC_FORM_URL;
+
   $("start").addEventListener("click", () => {
     $("preErr").textContent = "";
     const name = $("name").value.trim();
@@ -247,11 +266,11 @@
 
     if (name === ADMIN_CODE){
       if (ADMIN_SHEET_URL && ADMIN_SHEET_URL.startsWith("http")) location.href = ADMIN_SHEET_URL;
-      else alert("管理员链接未配置（需要你把 ADMIN_SHEET_URL 填成你的表格链接）。");
+      else alert("管理员表格链接未配置（不影响做题）。");
       return;
     }
 
-    sessionStorage.setItem("friend_quiz_name_google_v2", name);
+    sessionStorage.setItem("friend_quiz_name_google_v3", name);
     $("pre").hidden = true;
     $("form").hidden = false;
     updateProgress();
@@ -266,7 +285,7 @@
     const lock = loadLock();
     if (lock?.done){ showLocked(lock); return; }
 
-    const name = (sessionStorage.getItem("friend_quiz_name_google_v2") || "").trim();
+    const name = (sessionStorage.getItem("friend_quiz_name_google_v3") || "").trim();
     if (!name){ $("error").textContent = "称呼丢失了，请刷新重新输入。"; return; }
 
     const answers = getAnswers();
