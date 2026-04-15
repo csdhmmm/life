@@ -3,606 +3,267 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>人生模拟器：离谱宇宙</title>
+  <title>小问卷</title>
   <style>
-    :root{
-      --bg:#070a12;--card:#0f1630;--card2:#0c1227;--text:#e9eeff;--muted:#a7b2db;
-      --line:rgba(255,255,255,.08);--btn:#2a6bff;--btn2:#243055;--good:#2ee59d;--bad:#ff4d6d;--warn:#ffd166;
-    }
+    :root{--card:#111b2e;--text:#e7eefc;--muted:#a9b6d3;--btn:#2a68ff;--btn2:#243055;--line:rgba(255,255,255,.08);--good:#2ee59d;--bad:#ff4d6d}
     *{box-sizing:border-box}
-    body{margin:0;background:radial-gradient(1200px 700px at 30% 0%, #131b3d 0%, #070a12 55%, #050712 100%);color:var(--text);
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif}
-    .wrap{max-width:980px;margin:22px auto;padding:0 16px}
-    h1{margin:0 0 6px;font-size:26px}
-    .sub{color:var(--muted);margin-bottom:14px;line-height:1.55}
-    .grid{display:grid;grid-template-columns:1fr;gap:14px}
-    @media (min-width:980px){.grid{grid-template-columns: 1.45fr .55fr}}
-    .card{background:rgba(15,22,48,.92);border:1px solid var(--line);border-radius:14px;padding:16px}
+    body{margin:0;background:linear-gradient(180deg,#071027,#0b1220);color:var(--text);
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,"PingFang SC","Microsoft YaHei",sans-serif}
+    .wrap{max-width:900px;margin:22px auto;padding:0 16px}
+    h1{margin:0 0 6px}
+    .sub{color:var(--muted);line-height:1.6;margin:0 0 14px}
+    .card{background:rgba(17,27,46,.92);border:1px solid var(--line);border-radius:14px;padding:16px}
     .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .pill{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.08);color:var(--muted);font-size:12px}
-    .actions{display:flex;gap:10px;margin-top:10px}
-    button{border:0;border-radius:12px;padding:12px 12px;background:var(--btn2);color:var(--text);font-weight:800;cursor:pointer;text-align:left}
-    button:hover{filter:brightness(1.08)}
-    .primary{background:var(--btn)}
-    .smallbtn{padding:10px 12px;text-align:center}
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-    @media (max-width:540px){.stats{grid-template-columns:repeat(2,1fr)}}
-    .stat{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px}
-    .stat .k{color:var(--muted);font-size:12px}
-    .stat .v{font-size:18px;font-weight:900;margin-top:2px}
-    .sep{border:0;border-top:1px solid var(--line);margin:14px 0}
-    .eventTitle{font-weight:950;font-size:18px;margin:0 0 10px}
-    .eventDesc{color:var(--muted);line-height:1.65;margin:0 0 14px}
-    .choices{display:grid;gap:10px}
-    .log{max-height:520px;overflow:auto;font-size:13px;line-height:1.65;color:var(--muted)}
-    .log p{margin:0 0 10px}
-    .delta{font-weight:900}
-    .good{color:var(--good)}
-    .bad{color:var(--bad)}
-    .warn{color:var(--warn)}
-    .endTitle{font-size:20px;font-weight:1000;margin:0 0 8px}
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;}
-    .chart{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:10px;margin-top:10px}
-    .hint{font-size:12px;color:var(--muted);margin-top:8px}
-    a{color:#8ab4ff}
+    input[type="text"]{flex:1;max-width:320px;padding:10px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text)}
+    .q{padding:14px 0;border-top:1px solid var(--line)}
+    .q:first-child{border-top:0}
+    .qt{font-weight:900}
+    .opts{display:grid;gap:10px;margin-top:10px}
+    label{display:flex;gap:10px;align-items:flex-start;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);
+      padding:10px 12px;border-radius:12px;cursor:pointer}
+    input{margin-top:3px}
+    button{border:0;border-radius:12px;padding:12px 14px;background:var(--btn2);color:var(--text);font-weight:900;cursor:pointer}
+    button.primary{background:var(--btn)}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .result{margin-top:14px;padding:14px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+    .score{font-size:34px;font-weight:1000}
+    .pill{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(46,229,157,.18);color:var(--good);font-weight:900}
+    .muted{color:var(--muted)}
+    .err{color:var(--bad);font-weight:900}
   </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>人生模拟器：离谱宇宙</h1>
-  <div class="sub">
-    关键节点式人生。你可能成为：<b>顶流网红</b>、<b>修仙老祖</b>、或<b>穿越打工皇帝</b>。每次选择会改变属性，并记录你的<b>幸福曲线</b>。
-  </div>
+  <h1>小问卷</h1>
+  <p class="sub">请先输入你的称呼，然后完成 20 题。提交后会生成一个结果。</p>
 
-  <div class="grid">
-    <div class="card">
-      <div class="row">
-        <div class="pill">年龄：<span id="age">0</span></div>
-        <div class="pill">节点：<span id="turn">0</span></div>
-        <div class="pill">路线：<span id="route">未定</span></div>
-        <div class="pill">标签：<span id="tags">无</span></div>
+  <div class="card">
+    <!-- 前置：输入称呼 -->
+    <div id="pre">
+      <div class="row" style="justify-content:space-between">
+        <div class="muted">请输入你的称呼：</div>
+        <input id="name" type="text" maxlength="20" placeholder="比如：小明" />
+        <button class="primary" id="start">开始答题</button>
       </div>
-
-      <div class="stats" id="stats"></div>
-
-      <hr class="sep" />
-
-      <p class="eventTitle" id="eventTitle">-</p>
-      <p class="eventDesc" id="eventDesc">-</p>
-      <div class="choices" id="choices"></div>
-
-      <div class="actions">
-        <button id="restart" class="primary smallbtn">重开</button>
-        <button id="skip" class="smallbtn">跳到下个节点</button>
-      </div>
-
-      <div class="hint">
-        提示：这是“事件数据驱动”的框架。你后续只要加事件对象，就能扩展剧情。
-      </div>
+      <p class="muted" style="margin:10px 0 0">提示：提交后同一设备只能提交一次。</p>
+      <p id="preErr" class="err" style="margin-top:10px"></p>
     </div>
 
-    <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <div style="font-weight:950">人生记录</div>
-        <div class="pill mono">WASD/方向键：无效（纯点选）</div>
-      </div>
-      <div class="log" id="log" style="margin-top:10px"></div>
+    <!-- 锁定提示 -->
+    <div id="locked" class="result" hidden>
+      <div class="muted">你已经提交过一次啦（本设备）。</div>
+      <div class="score"><span id="lockedPct">--</span>%</div>
+      <div class="pill" id="lockedBadge"></div>
+      <div class="muted" style="margin-top:8px">谢谢参与～</div>
+    </div>
 
-      <div class="chart" id="chartWrap" hidden>
-        <div style="font-weight:900">幸福曲线</div>
-        <div id="chart" style="margin-top:8px"></div>
-        <div class="hint">横轴=关键节点；纵轴=幸福值（越高越快乐）。</div>
+    <!-- 正式问卷 -->
+    <div id="form" hidden>
+      <div id="quiz"></div>
+
+      <div class="row" style="margin-top:14px">
+        <button class="primary" id="submit">提交</button>
+        <span id="status" class="muted"></span>
+      </div>
+      <p id="error" class="err" style="margin-top:12px"></p>
+
+      <div id="result" class="result" hidden>
+        <div class="muted">你的结果：</div>
+        <div class="score"><span id="pct">70</span>%</div>
+        <div class="pill" id="badge">默契度还可以</div>
+        <div class="muted" style="margin-top:8px">谢谢你认真作答！</div>
       </div>
     </div>
   </div>
 </div>
 
-<script>
-/** ================= 状态与工具 ================= */
-const NODES = [0, 6, 12, 15, 18, 22, 26, 30]; // 关键节点年龄
-const ROUTES = { INFLUENCER:"网红", CULTIVATION:"修仙", ISEKAI:"穿越" };
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
-const state = {
-  nodeIdx: 0,
-  age: 0,
-  turn: 0,
-  route: null,         // 'INFLUENCER' | 'CULTIVATION' | 'ISEKAI' | null
-  tags: new Set(),
-  // 属性：智力/魅力/体力/情商/运气
-  stats: { intel:5, charm:5, power:5, eq:5, luck:5 },
-  // 幸福（用于曲线）
-  happiness: 50,
-  happinessSeries: [],   // [{age, value}]
-  historyChoices: [],    // [{age, title, choice}]
-  ended: false,
-  log: []
+/** 你的 Firebase 配置（已按你发的内容填好） */
+const firebaseConfig = {
+  apiKey: "AIzaSyAaBNaiA9CRHgea6b4huJmRihsRdzrEFl8",
+  authDomain: "friend-quiz-c6a8b.firebaseapp.com",
+  projectId: "friend-quiz-c6a8b",
+  storageBucket: "friend-quiz-c6a8b.firebasestorage.app",
+  messagingSenderId: "1081335961814",
+  appId: "1:1081335961814:web:5686ad4d7a08e3246f5177",
+  measurementId: "G-31VZSML6ZJ"
 };
 
-const clamp = (n, lo, hi)=>Math.max(lo, Math.min(hi, n));
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-function statName(k){
-  return {intel:"智力", charm:"魅力", power:"体力", eq:"情商", luck:"运气"}[k] || k;
-}
-
-function routeName(r){
-  if (!r) return "未定";
-  return ROUTES[r] || r;
-}
-
-function logLine(html){
-  state.log.push(html);
-  const el = document.getElementById("log");
-  el.innerHTML = state.log.map(x=>`<p>· ${x}</p>`).join("");
-  el.scrollTop = el.scrollHeight;
-}
-
-function delta(d){
-  // d: {stats:{...}, happiness:+/- , tagsAdd:[], tagsDel:[], route:'', note:''}
-  if (d.stats){
-    for (const [k,v] of Object.entries(d.stats)){
-      state.stats[k] = clamp(state.stats[k] + v, -10, 99);
-    }
-  }
-  if (typeof d.happiness === "number"){
-    state.happiness = clamp(state.happiness + d.happiness, 0, 100);
-  }
-  if (d.tagsAdd) d.tagsAdd.forEach(t=>state.tags.add(t));
-  if (d.tagsDel) d.tagsDel.forEach(t=>state.tags.delete(t));
-  if (d.route) state.route = d.route;
-
-  const parts = [];
-  if (d.stats){
-    for (const [k,v] of Object.entries(d.stats)){
-      const cls = v >= 0 ? "good" : "bad";
-      const sign = v >= 0 ? "+" : "";
-      parts.push(`<span class="delta ${cls}">${statName(k)} ${sign}${v}</span>`);
-    }
-  }
-  if (typeof d.happiness === "number"){
-    const cls = d.happiness >= 0 ? "good" : "bad";
-    const sign = d.happiness >= 0 ? "+" : "";
-    parts.push(`<span class="delta ${cls}">幸福 ${sign}${d.happiness}</span>`);
-  }
-  if (d.note) parts.push(`<span class="warn">${escapeHtml(d.note)}</span>`);
-
-  if (parts.length) logLine(parts.join("，"));
-}
-
-function escapeHtml(s){
-  return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
-}
-
-function recordHappiness(){
-  // 每个节点记录一次幸福
-  const age = state.age;
-  const last = state.happinessSeries.at(-1);
-  if (!last || last.age !== age){
-    state.happinessSeries.push({ age, value: state.happiness });
-  } else {
-    last.value = state.happiness;
-  }
-}
-
-/** ================= 事件库（离谱版）=================
- * 每个事件：when(state) -> bool
- * choices: [{text, apply(state)}]
- */
-const EVENTS = [
-  {
-    id:"born",
-    when: s => s.age === 0,
-    title:"你出生了（并且很离谱）",
-    desc:"护士看了你一眼：‘这孩子眼里有光——像 Wi-Fi 信号。’ 请选择你的初始天赋。",
-    choices:[
-      { text:"读书型：你会背圆周率但不会系鞋带", apply: s => delta({stats:{intel:+3, power:-1}, happiness:+1, note:"智力启动！"}) },
-      { text:"社交型：你对任何人都能喊一声‘家人们’", apply: s => delta({stats:{charm:+2, eq:+2}, happiness:+2}) },
-      { text:"玄学型：你一笑，窗外乌鸦就开始打字", apply: s => delta({stats:{luck:+3, intel:+1}, happiness:+0, note:"命运开始抖动"}) },
-    ]
-  },
-  {
-    id:"childhood",
-    when: s => s.age === 6,
-    title:"6 岁：你第一次意识到人生是可选项",
-    desc:"你在幼儿园毕业典礼上，主持人让你说梦想。你会怎么说？",
-    choices:[
-      { text:"“我要当顶流！”（当场开始比心）", apply: s => delta({route:"INFLUENCER", tagsAdd:["比心怪"], stats:{charm:+2, eq:+1}, happiness:+3}) },
-      { text:"“我要修仙！”（并掏出一根葱当法器）", apply: s => delta({route:"CULTIVATION", tagsAdd:["葱门"], stats:{intel:+1, luck:+1}, happiness:+2}) },
-      { text:"“我要穿越！”（对着校门口的广告牌许愿）", apply: s => delta({route:"ISEKAI", tagsAdd:["穿越预备役"], stats:{luck:+2, power:+1}, happiness:+1}) },
-    ]
-  },
-  {
-    id:"12_influencer",
-    when: s => s.age === 12 && s.route === "INFLUENCER",
-    title:"12 岁：你的视频爆了",
-    desc:"你发了个‘三秒学会写作业’视频，评论区开始喊你‘学习系网红’。",
-    choices:[
-      { text:"继续深耕：每天稳定更新", apply: s => delta({tagsAdd:["稳定更新"], stats:{charm:+2, eq:+1}, happiness:+2}) },
-      { text:"整活：挑战‘用鼻子写字’", apply: s => delta({tagsAdd:["整活大师"], stats:{charm:+1, luck:+1, power:-1}, happiness:+3, note:"鼻子：？"}) },
-      { text:"突然清醒：先把成绩搞上去", apply: s => delta({tagsAdd:["突然努力"], stats:{intel:+2, charm:-1}, happiness:-1}) },
-    ]
-  },
-  {
-    id:"12_cultivation",
-    when: s => s.age === 12 && s.route === "CULTIVATION",
-    title:"12 岁：你加入‘葱门’修行",
-    desc:"师兄说：‘炼气先炼胃。’ 你要怎么修？",
-    choices:[
-      { text:"苦修：每天打坐 2 小时", apply: s => delta({tagsAdd:["苦修"], stats:{intel:+2, power:+1}, happiness:-1}) },
-      { text:"悟道：研究玄学与概率论", apply: s => delta({tagsAdd:["悟道"], stats:{intel:+2, luck:+1}, happiness:+1}) },
-      { text:"偷懒：把打坐时间拿来睡觉", apply: s => delta({tagsAdd:["睡仙"], stats:{power:+2}, happiness:+2, note:"你确实在长身体"}) },
-    ]
-  },
-  {
-    id:"12_isekai",
-    when: s => s.age === 12 && s.route === "ISEKAI",
-    title:"12 岁：第一次穿越失败",
-    desc:"你对着广告牌念咒语，结果只穿越到了隔壁小卖部。你学到了什么？",
-    choices:[
-      { text:"学技能：练体力，至少跑得快", apply: s => delta({tagsAdd:["跑得快"], stats:{power:+2}, happiness:+1}) },
-      { text:"学语言：万一穿去异世界要交流", apply: s => delta({tagsAdd:["语言天赋"], stats:{intel:+2, eq:+1}, happiness:+0}) },
-      { text:"学运气：每天摸一摸招财猫", apply: s => delta({tagsAdd:["玄学加成"], stats:{luck:+2}, happiness:+2}) },
-    ]
-  },
-  {
-    id:"15_common",
-    when: s => s.age === 15,
-    title:"15 岁：关键考试（但世界观正在漂移）",
-    desc:"你发现考场的钟表倒着走。你决定——",
-    choices:[
-      { text:"硬考：相信科学", apply: s => delta({stats:{intel:+2, eq:+1}, happiness:-1}) },
-      { text:"拜一下：相信玄学", apply: s => delta({stats:{luck:+2}, happiness:+1, note:"科学：你礼貌吗"}) },
-      { text:"当场直播：相信流量", apply: s => delta({stats:{charm:+2, eq:-1}, happiness:+2, note:"监考老师：？？"}) },
-    ]
-  },
-  {
-    id:"18_influencer",
-    when: s => s.age === 18 && s.route === "INFLUENCER",
-    title:"18 岁：你要不要签约 MCN？",
-    desc:"MCN 递来合同：‘我们负责资源，你负责灵魂（以及 KPI）。’",
-    choices:[
-      { text:"签约：资源拉满", apply: s => delta({tagsAdd:["签约MCN"], stats:{charm:+2, eq:+1}, happiness:+1}) },
-      { text:"不签：做独立创作者", apply: s => delta({tagsAdd:["独立"], stats:{intel:+1, charm:+1, luck:+1}, happiness:+2}) },
-      { text:"跑路：去读大学（假装自己很正常）", apply: s => delta({tagsAdd:["大学"], stats:{intel:+2, charm:-1}, happiness:+0, note:"你开始写论文标题：论比心的社会学意义"}) },
-    ]
-  },
-  {
-    id:"18_cultivation",
-    when: s => s.age === 18 && s.route === "CULTIVATION",
-    title:"18 岁：筑基大考",
-    desc:"师父给你三条路：稳、快、或离谱。",
-    choices:[
-      { text:"稳扎稳打：正经筑基", apply: s => delta({tagsAdd:["筑基"], stats:{intel:+2, power:+1}, happiness:+0}) },
-      { text:"剑走偏锋：用运气强行突破", apply: s => delta({tagsAdd:["赌徒修仙"], stats:{luck:+3, power:-1}, happiness:+1}) },
-      { text:"当场顿悟：写一首诗突破", apply: s => delta({tagsAdd:["诗仙"], stats:{eq:+2, intel:+1}, happiness:+2, note:"你押韵押到了���道上"}) },
-    ]
-  },
-  {
-    id:"18_isekai",
-    when: s => s.age === 18 && s.route === "ISEKAI",
-    title:"18 岁：你真的穿越了",
-    desc:"你醒来发现自己在异世界——旁边的人说：‘勇者大人，先加个班。’",
-    choices:[
-      { text:"接受：成为异世界打工勇者", apply: s => delta({tagsAdd:["异世界打工"], stats:{power:+1, eq:+1}, happiness:-1}) },
-      { text:"反抗：我要当反派！", apply: s => delta({tagsAdd:["反派预备"], stats:{charm:+1, luck:+1}, happiness:+1}) },
-      { text:"摸鱼：先观察局势", apply: s => delta({tagsAdd:["摸鱼王"], stats:{intel:+2}, happiness:+2}) },
-    ]
-  },
-  {
-    id:"22_common",
-    when: s => s.age === 22,
-    title:"22 岁：命运给你一次‘开挂/不开挂’选择",
-    desc:"你遇到一个自称‘系统’的东西：‘绑定我，人生更爽，但代价你自己看着办。’",
-    choices:[
-      { text:"绑定系统：我想赢", apply: s => delta({tagsAdd:["绑定系统"], stats:{luck:+2, intel:+1}, happiness:+2, note:"系统：叮！"}) },
-      { text:"拒绝系统：我靠自己", apply: s => delta({tagsAdd:["硬核玩家"], stats:{eq:+2, power:+1}, happiness:+1}) },
-      { text:"把系统卖了：变现才是正义", apply: s => delta({tagsAdd:["变现鬼才"], stats:{charm:+1, eq:-1}, happiness:+3, note:"系统：？？？"}) },
-    ]
-  },
-  {
-    id:"26_common",
-    when: s => s.age === 26,
-    title:"26 岁：现实来敲门（用脚踹的）",
-    desc:"你开始认真思考：我到底擅长什么？",
-    choices:[
-      { text:"提升技能：学点真本事", apply: s => delta({tagsAdd:["技能提升"], stats:{intel:+2, eq:+1}, happiness:+1}) },
-      { text:"提升身体：健康就是版本答案", apply: s => delta({tagsAdd:["健身"], stats:{power:+2}, happiness:+1}) },
-      { text:"提升运气：买彩票（科学理财）", apply: s => delta({tagsAdd:["彩票研究"], stats:{luck:+2}, happiness:+0, note:"理财：你礼貌吗"}) },
-    ]
-  },
-  {
-    id:"30_end",
-    when: s => s.age === 30,
-    title:"30 岁：结算（离谱宇宙版）",
-    desc:"你站在 30 岁的门口，系统弹出结算页。你的职业与未来将被生成。",
-    choices:[
-      { text:"生成结局报告", apply: s => endGame() }
-    ]
-  }
+const QUESTIONS = [
+  { id:"q1", text:"在一段关系中，你认为“被爱”最核心的体现是？", options:["对方愿意为你花大量时间","对方能记住并理解你的情绪","对方在重要选择上优先考虑你","对方愿意为你改变自己"] },
+  { id:"q2", text:"当你向另一半倾诉烦恼时，你最希望他做的第一件事是？", options:["安静听完，抱抱你","帮你分析问题，给出建议","陪你一起骂让你生气的人/事","说“没关系，有我在”"] },
+  { id:"q3", text:"你认为“安全感”在关系里主要来自哪里？", options:["对方主动报备行踪和社交","对方言出必行，小事也不敷衍","即使吵架，也从不说伤人的话","对方的未来计划里明确有你"] },
+  { id:"q4", text:"你更能接受以下哪种“不完美”？", options:["对方偶尔忘记重要日期","对方收入暂时不高但努力","对方不擅长浪漫和惊喜","对方有自己很坚持的小癖好"] },
+  { id:"q5", text:"对于“共同进步”，你的真实态度是？", options:["必须两人步调一致，否则容易散","可以不同步，但要互相支持不拖累","各拼各的，顶峰相见就好","我不需要他多优秀，陪伴更重要"] },
+  { id:"q6", text:"当你和另一半意见严重不合时，你最希望最终如何收场？", options:["谁有道理听谁的","他主动让步，哄我一下","各退一步，找折中方案","暂时搁置，不伤感情为先"] },
+  { id:"q7", text:"你认为另一半最不该在你们关系中做的事是？", options:["对你撒谎（哪怕是善意的）","在外人面前贬低或忽视你","冷战超过两天不沟通","拿你和别人比较"] },
+  { id:"q8", text:"你最希望另一半如何对待你的社交圈（朋友/闺蜜）？", options:["积极融入，成为大家的朋友","保持礼貌距离，不干涉就好","完全信任，不需要过多接触","偶尔一起聚会，但尊重各自空间"] },
+  { id:"q9", text:"关于“金钱观”，你最在意对方的是？", options:["愿意为你花钱的程度","是否有储蓄和规划的习惯","不隐瞒收入和债务","消费观与你大致相同（比如该省省该花花）"] },
+  { id:"q10", text:"你认为“浪漫”最让你心动的一种形式是？", options:["精心策划的惊喜（如生日派对、旅行）","日常的小动作（倒杯水、盖好被子）","认真听你说话并记住细节","偶尔写一封信或送不贵但有心的礼物"] },
+  { id:"q11", text:"当你们进入长期稳定关系后，你最怕出现的感觉是？", options:["无聊，像合租室友","压抑，不敢表达真实想法","被理所当然地忽视","看不到未来的方向"] },
+  { id:"q12", text:"如果另一半工作特别忙、持续一个月无法陪你，你希望他怎么做？", options:["提前解释清楚，并给出结束时间","再忙每天也发一条消息或语音","忙完后用整块时间补偿你","带你进入他的工作，让你参与一部分"] },
+  { id:"q13", text:"你心里认为“好的伴侣”更像以下哪种角色？", options:["战友——一起打怪升级","港湾——让你安心休息","镜子——帮你看到真实的自己","玩伴——让生活轻松有趣"] },
+  { id:"q14", text:"如果满分是10分，你希望你们关系中“独立空间”占几分？", options:["1-2分（几乎完全黏在一起）","3-5分（偶尔各自做事）","6-8分（各有爱好，但常分享）","9-10分（高度独立，精神契合即可）"] },
+  { id:"q15", text:"用一句话总结：你最深层的渴望是对方能给你______？", options:["坚定不移的选择","无条件的接纳","持续的成长动力","平淡里的温暖"] },
+  { id:"q16", text:"关于家里的整洁程度，你的真实态度是？", options:["必须井井有条，不然会烦躁","差不多就行，一周大扫除一次","乱中有序，我知道东西在哪就行","完全无所谓，开心就好"] },
+  { id:"q17", text:"吵完架之后，你更希望对方用什么方式让关系回温？", options:["直接过来说“对不起”，不翻旧账","用行动示好，比如做顿饭或买个奶茶","隔半天再像没事人一样聊别的话题","写一段话把感受说清楚，再一起翻篇"] },
+  { id:"q18", text:"你更喜欢对方用哪种方式表达“我想你”？", options:["直接说“我想你了”","发一张正在做的事的照片","突然出现或约你见面","分享一首歌或一段话"] },
+  { id:"q19", text:"对于“分享日常小事”，你的态度是？", options:["希望对方事无巨细都跟我分享","有趣或特别的才分享，不用天天报备","不太爱分享琐事，更想聊有深度的","对方主动分享我会开心，但我很少主动"] },
+  { id:"q20", text:"如果你在伴侣面前突然哭了，你最不希望对方做的是？", options:["不停问“怎么了”“别哭了”","试图讲道理分析原因","不知所措，愣在原地","说“这有什么好哭的”"] },
 ];
 
-/** ================= 渲染 ================= */
-function renderTop(){
-  document.getElementById("age").textContent = state.age;
-  document.getElementById("turn").textContent = state.turn;
-  document.getElementById("route").textContent = routeName(state.route);
-  document.getElementById("tags").textContent = state.tags.size ? Array.from(state.tags).join("、") : "无";
+const LOCK_KEY = "friend_quiz_lock_v1";
+
+const $ = (id)=>document.getElementById(id);
+const pre = $("pre");
+const preErr = $("preErr");
+const form = $("form");
+const locked = $("locked");
+const lockedPct = $("lockedPct");
+const lockedBadge = $("lockedBadge");
+
+function setStatus(t){ $("status").textContent = t || ""; }
+function setError(t){ $("error").textContent = t || ""; }
+
+function badgeText(pct){
+  return pct >= 80 ? "默契很强" : pct >= 75 ? "默契度不错" : "默契度还可以";
 }
 
-function renderStats(){
-  const statsEl = document.getElementById("stats");
-  const items = [
-    ["intel","智力"],["charm","魅力"],["power","体力"],["eq","情商"],["luck","运气"],
-    ["happy","幸福（0-100）"]
-  ];
-  const temp = { ...state.stats, happy: state.happiness };
-  statsEl.innerHTML = items.map(([k,label]) => `
-    <div class="stat">
-      <div class="k">${label}</div>
-      <div class="v">${temp[k]}</div>
-    </div>
-  `).join("");
+function fakeResult(){
+  const pool = [70, 75, 80];
+  const pct = pool[Math.floor(Math.random() * pool.length)];
+  return { pct, badge: badgeText(pct) };
 }
 
-function pickEvent(){
-  return EVENTS.find(e => e.when(state));
+function renderQuiz(){
+  $("quiz").innerHTML = QUESTIONS.map((q, idx) => {
+    const opts = q.options.map((opt, oi) => `
+      <label>
+        <input type="radio" name="q_${q.id}" value="${oi}">
+        <div>${String.fromCharCode(65+oi)}. ${opt}</div>
+      </label>
+    `).join("");
+    return `
+      <div class="q">
+        <div class="qt">${idx+1}. ${q.text}</div>
+        <div class="opts">${opts}</div>
+      </div>
+    `;
+  }).join("");
 }
 
-function renderEvent(){
-  if (state.ended) return;
+function getAnswers(){
+  const ans = {};
+  for (const q of QUESTIONS){
+    const picked = document.querySelector(`input[name="q_${q.id}"]:checked`);
+    ans[q.id] = picked ? Number(picked.value) : null;
+  }
+  return ans;
+}
 
-  const e = pickEvent();
-  if (!e){
-    // 没事件：跳下一个节点
-    gotoNextNode();
+function allAnswered(answers){
+  return QUESTIONS.every(q => answers[q.id] !== null);
+}
+
+function loadLock(){
+  try{ return JSON.parse(localStorage.getItem(LOCK_KEY) || "null"); }catch(e){ return null; }
+}
+function saveLock(lock){
+  localStorage.setItem(LOCK_KEY, JSON.stringify(lock));
+}
+
+function showLocked(lock){
+  pre.hidden = true;
+  form.hidden = true;
+  locked.hidden = false;
+  lockedPct.textContent = String(lock.pct);
+  lockedBadge.textContent = lock.badge;
+}
+
+function showQuiz(){
+  pre.hidden = true;
+  locked.hidden = true;
+  form.hidden = false;
+}
+
+$("start").addEventListener("click", () => {
+  preErr.textContent = "";
+  const name = $("name").value.trim();
+  if (!name){
+    preErr.textContent = "请先输入称呼。";
+    return;
+  }
+  sessionStorage.setItem("friend_quiz_name_v1", name);
+  showQuiz();
+});
+
+$("submit").addEventListener("click", async () => {
+  setError("");
+  setStatus("");
+
+  const lock = loadLock();
+  if (lock?.done){
+    showLocked(lock);
     return;
   }
 
-  document.getElementById("eventTitle").textContent = e.title;
-  document.getElementById("eventDesc").textContent = e.desc;
-
-  const choicesEl = document.getElementById("choices");
-  choicesEl.innerHTML = "";
-  e.choices.forEach((ch, idx) => {
-    const btn = document.createElement("button");
-    btn.textContent = ch.text;
-    if (idx === 0) btn.classList.add("primary");
-    btn.onclick = () => {
-      logLine(`<b>${state.age} 岁</b>：${escapeHtml(e.title)} → 你选择了「${escapeHtml(ch.text)}」`);
-      ch.apply(state);
-      recordHappiness();
-      // 结局事件不推进
-      if (!state.ended && e.id !== "30_end") gotoNextNode();
-      renderAll();
-    };
-    choicesEl.appendChild(btn);
-  });
-}
-
-function renderAll(){
-  renderTop();
-  renderStats();
-  renderEvent();
-}
-
-/** ================= 进度控制 ================= */
-function syncNode(){
-  state.age = NODES[state.nodeIdx];
-  state.turn = state.nodeIdx;
-}
-
-function gotoNextNode(){
-  state.nodeIdx = Math.min(state.nodeIdx + 1, NODES.length - 1);
-  syncNode();
-}
-
-/** ================= 结局与报告 ================= */
-function scoreRouteBias(){
-  const st = state.stats;
-  let influencer = st.charm * 2 + st.eq + st.luck + (state.tags.has("签约MCN") ? 6 : 0) + (state.tags.has("整活大师") ? 3 : 0);
-  let cultivation = st.intel * 2 + st.luck + st.power + (state.tags.has("筑基") ? 6 : 0) + (state.tags.has("苦修") ? 2 : 0);
-  let isekai = st.luck * 2 + st.power + st.eq + (state.tags.has("绑定系统") ? 5 : 0) + (state.tags.has("异世界打工") ? 2 : 0);
-
-  return { influencer, cultivation, isekai };
-}
-
-function chooseEnding(){
-  const st = state.stats;
-  const { influencer, cultivation, isekai } = scoreRouteBias();
-
-  // 主路线：如果玩家早期已定 route，就优先，但属性/标签也可能“反杀”
-  let primary = state.route;
-  if (!primary){
-    // 没定路线就按分数
-    primary = (influencer >= cultivation && influencer >= isekai) ? "INFLUENCER"
-            : (cultivation >= isekai) ? "CULTIVATION"
-            : "ISEKAI";
+  const name = (sessionStorage.getItem("friend_quiz_name_v1") || "").trim();
+  if (!name){
+    setError("称呼丢失了，请刷新重新输入。");
+    return;
   }
 
-  // 生成称号
-  let title = "";
-  let job = "";
-  let future = "";
-
-  if (primary === "INFLUENCER"){
-    if (st.charm >= 12 && st.eq >= 10){
-      job = "顶流网红 / 品牌主理人";
-      title = "【全网家人们的精神股东】";
-      future = "你靠内容与连接吃饭：一边涨粉一边自我怀疑。未来 3 年你会经历一次人设崩塌危机，但也会学会真正的边界感。";
-    } else {
-      job = "中腰部创作者";
-      title = "【努力营业但不太红】";
-      future = "你在流量海里学会游泳。未来你要么找到细分赛道一飞冲天，要么转去做幕后（剪辑/运营/商务）成为‘别人的贵人’。";
-    }
-  } else if (primary === "CULTIVATION"){
-    if (st.intel >= 12 && st.luck >= 10){
-      job = "修仙老祖（概率论方向）";
-      title = "【天道都要给你算一卦】";
-      future = "你把‘运气’训练成了学科。未来你会在关键时刻踩中风口（或者雷），但你总能用智力把锅变成机会。";
-    } else {
-      job = "门派骨干 / 外门长老";
-      title = "【看起来很强其实更能扛事】";
-      future = "你不一定最耀眼，但很稳。未来你会带新人、守资源、处理烂摊子——然后在某一天突然悟了，发现自己早就变强了。";
-    }
-  } else { // ISEKAI
-    if (st.luck >= 12 && state.tags.has("绑定系统")){
-      job = "异世界开挂勇者（带 KPI）";
-      title = "【系统认证的卷王】";
-      future = "你把开挂玩成了绩效。未来你会获得一次‘回到现实/留在异世界’的选择：无论选哪个，你都会后悔一天，然后继续卷。";
-    } else {
-      job = "异世界生存专家";
-      title = "【不靠挂也能苟到最后】";
-      future = "你靠观察、沟通与体力通关。未来你会成为一个‘哪里都能活’的人：换城市、换行业、换世界观，你都能快速适应。";
-    }
+  const answers = getAnswers();
+  if (!allAnswered(answers)){
+    setError("还有题没选完哦，选完才能提交。");
+    return;
   }
 
-  // 幸福评价
-  const h = state.happiness;
-  const mood = h >= 75 ? "总体很快乐"
-            : h >= 55 ? "还算过得去"
-            : h >= 35 ? "有点拧巴"
-            : "看起来需要一个长假";
+  const fake = fakeResult();
 
-  return { job, title, future, mood };
-}
-
-function renderChart(){
-  const wrap = document.getElementById("chartWrap");
-  const chart = document.getElementById("chart");
-
-  if (!state.happinessSeries.length) { wrap.hidden = true; return; }
-  wrap.hidden = false;
-
-  const pts = state.happinessSeries;
-  const W = 360, H = 140, pad = 18;
-  const xs = pts.map((_,i)=> i);
-  const minX = 0, maxX = Math.max(1, xs.length - 1);
-  const minY = 0, maxY = 100;
-
-  const x = (i)=> pad + ( (i - minX) / (maxX - minX) ) * (W - pad*2);
-  const y = (v)=> pad + (1 - ( (v - minY) / (maxY - minY) )) * (H - pad*2);
-
-  const d = pts.map((p,i)=> `${x(i).toFixed(1)},${y(p.value).toFixed(1)}`).join(" ");
-  const labels = pts.map((p,i)=> `<text x="${x(i)}" y="${H-4}" text-anchor="middle" font-size="10" fill="rgba(255,255,255,.55)">${p.age}</text>`).join("");
-
-  chart.innerHTML = `
-  <svg width="100%" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-    <defs>
-      <linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
-        <stop offset="0" stop-color="#2a6bff" stop-opacity="0.9"/>
-        <stop offset="1" stop-color="#2ee59d" stop-opacity="0.25"/>
-      </linearGradient>
-    </defs>
-    <rect x="0" y="0" width="${W}" height="${H}" rx="10" fill="rgba(255,255,255,.03)"/>
-    <path d="M ${d.replaceAll(" ", " L ")}" fill="none" stroke="url(#g)" stroke-width="3"/>
-    ${pts.map((p,i)=> `<circle cx="${x(i)}" cy="${y(p.value)}" r="3.8" fill="#e9eeff" opacity="0.95"/>`).join("")}
-    ${labels}
-    <text x="${pad}" y="${pad}" font-size="10" fill="rgba(255,255,255,.6)">幸福</text>
-    <text x="${W-pad}" y="${pad}" text-anchor="end" font-size="10" fill="rgba(255,255,255,.6)">100</text>
-  </svg>
-  `;
-}
-
-function endGame(){
-  state.ended = true;
-  const end = chooseEnding();
-
-  logLine(`<span class="warn">—— 结局生成 ——</span>`);
-  logLine(`<div class="endTitle">结局：${escapeHtml(end.job)}</div>`);
-  logLine(`<b>${escapeHtml(end.title)}</b>`);
-  logLine(`${escapeHtml(end.future)}`);
-  logLine(`幸福状态：<b>${escapeHtml(end.mood)}</b>（当前幸福 ${state.happiness}/100）`);
-  logLine(`最终属性：智力 ${state.stats.intel}｜魅力 ${state.stats.charm}｜体力 ${state.stats.power}｜情商 ${state.stats.eq}｜运气 ${state.stats.luck}`);
-
-  // 关键选择回放
-  if (state.historyChoices.length){
-    const lines = state.historyChoices.map(x => `${x.age} 岁：${x.title} → ${x.choice}`).join("<br/>");
-    logLine(`<div class="mono" style="margin-top:6px">关键选择回放：<br/>${lines}</div>`);
+  const detailed = {};
+  for (const q of QUESTIONS){
+    const idx = answers[q.id];
+    detailed[q.id] = { index: idx, option: q.options[idx], question: q.text };
   }
 
-  renderChart();
+  $("submit").disabled = true;
+  setStatus("提交中…");
 
-  document.getElementById("eventTitle").textContent = `结局：${end.job}`;
-  document.getElementById("eventDesc").textContent = `${end.title}｜${end.mood}`;
-  document.getElementById("choices").innerHTML = `
-    <button class="primary" id="again">再来一局</button>
-    <button id="share">复制分享文案</button>
-  `;
-
-  document.getElementById("again").onclick = () => reset();
-  document.getElementById("share").onclick = async () => {
-    const text =
-`我在《人生模拟器：离谱宇宙》跑出了结局：
-${end.job}
-${end.title}
-幸福：${state.happiness}/100
-属性：智力${state.stats.intel} 魅力${state.stats.charm} 体力${state.stats.power} 情商${state.stats.eq} 运气${state.stats.luck}
-（GitHub Pages 游戏）`;
-    try{
-      await navigator.clipboard.writeText(text);
-      alert("已复制到剪贴板！");
-    }catch(e){
-      prompt("复制下面这段：", text);
-    }
-  };
-}
-
-/** ================= 初始化与按钮 ================= */
-function reset(){
-  state.nodeIdx = 0;
-  state.age = 0;
-  state.turn = 0;
-  state.route = null;
-  state.tags = new Set();
-  state.stats = { intel:5, charm:5, power:5, eq:5, luck:5 };
-  state.happiness = 50;
-  state.happinessSeries = [];
-  state.historyChoices = [];
-  state.ended = false;
-  state.log = [];
-  document.getElementById("log").innerHTML = "";
-  document.getElementById("chartWrap").hidden = true;
-
-  logLine("新的人生开始了。请选择你的离谱天赋。");
-  syncNode();
-  recordHappiness();
-  renderAll();
-}
-
-// 拦截选择，顺便记录“关键选择回放”
-(function patchChoiceRecording(){
-  // 在渲染事件时记录选择文本（通过事件点击里补）
-  const originalRenderEvent = renderEvent;
-  window.renderEvent = function(){
-    const e = pickEvent();
-    if (!e || state.ended) return originalRenderEvent();
-
-    // 重写渲染以插入回放记录
-    document.getElementById("eventTitle").textContent = e.title;
-    document.getElementById("eventDesc").textContent = e.desc;
-
-    const choicesEl = document.getElementById("choices");
-    choicesEl.innerHTML = "";
-    e.choices.forEach((ch, idx) => {
-      const btn = document.createElement("button");
-      btn.textContent = ch.text;
-      if (idx === 0) btn.classList.add("primary");
-      btn.onclick = () => {
-        state.historyChoices.push({ age: state.age, title: e.title, choice: ch.text });
-        logLine(`<b>${state.age} 岁</b>：${escapeHtml(e.title)} → 你选择了「${escapeHtml(ch.text)}」`);
-        ch.apply(state);
-        recordHappiness();
-        if (!state.ended && e.id !== "30_end") gotoNextNode();
-        renderAll();
-      };
-      choicesEl.appendChild(btn);
+  try{
+    await addDoc(collection(db, "submissions"), {
+      name,
+      createdAt: Date.now(),
+      ua: navigator.userAgent,
+      fakeScore: fake.pct,
+      answers,
+      detailed
     });
-  };
-})();
 
-document.getElementById("restart").onclick = () => reset();
-document.getElementById("skip").onclick = () => { if (!state.ended){ gotoNextNode(); recordHappiness(); renderAll(); } };
+    const lockObj = { done: true, pct: fake.pct, badge: fake.badge };
+    saveLock(lockObj);
 
-reset();
+    $("pct").textContent = String(fake.pct);
+    $("badge").textContent = fake.badge;
+    $("result").hidden = false;
+    setStatus("提交成功，谢谢！");
+  }catch(e){
+    setError(e?.message || String(e));
+  }finally{
+    $("submit").disabled = false;
+    setStatus("");
+  }
+});
+
+renderQuiz();
+const lock = loadLock();
+if (lock?.done) showLocked(lock);
 </script>
 </body>
 </html>
